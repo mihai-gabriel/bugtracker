@@ -6,7 +6,7 @@
 	export let count: number;
 </script>
 
-<li class="flex gap-2 items-center">
+<li class="flex w-10 items-center gap-2">
 	<i
 		class="fa-solid"
 		class:fa-calendar-days={status === Status.NOT_STARTED}
@@ -15,5 +15,5 @@
 		class:fa-circle-check={status === Status.COMPLETED}
 		class:fa-ban={status === Status.CANCELED}
 	/>
-	<p>{label}: {count}</p>
+	<p>{count}</p>
 </li>

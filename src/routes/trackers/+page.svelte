@@ -11,11 +11,11 @@
 	};
 </script>
 
-<div class="grid grid-cols-3 gap-4">
+<div class="flex-row gap-4">
 	{#each data.trackers as tracker (tracker._id)}
-		<div class="card card-hover cursor-pointer px-8 py-4 flex flex-col">
-			<h3 class="h3 mb-2">{tracker.name}</h3>
-			<ul class="grid grid-cols-3">
+		<div class="card card-hover cursor-pointer px-8 py-4 flex justify-between">
+			<h3 class="h3">{tracker.name}</h3>
+			<ul class="flex flex-row gap-2">
 				<BugCounter
 					label="Not started"
 					status={Status.NOT_STARTED}
