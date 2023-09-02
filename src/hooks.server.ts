@@ -12,7 +12,6 @@ run().then(() => {
 });
 
 export const authorization: Handle = async ({ event, resolve }) => {
-	// Protect any routes under /authenticated
 	const allowedGuestPaths = ['/', '/auth'];
 
 	if (!allowedGuestPaths.includes(event.url.pathname)) {
@@ -23,7 +22,6 @@ export const authorization: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	// If the request is still here, just proceed as normally
 	return resolve(event);
 };
 

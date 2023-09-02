@@ -1,7 +1,7 @@
-<script>
-	import { modeCurrent } from '@skeletonlabs/skeleton';
-	import { signIn, signOut } from '@auth/sveltekit/client';
+<script lang="ts">
 	import { page } from '$app/stores';
+	import { signIn, signOut } from '@auth/sveltekit/client';
+	import { modeCurrent } from '@skeletonlabs/skeleton';
 
 	import githubLogo from '$lib/assets/github-mark.png';
 </script>

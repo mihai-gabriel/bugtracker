@@ -2,17 +2,23 @@
 	import '@fortawesome/fontawesome-free/css/all.min.css';
 	import '../app.postcss';
 
+	import Drawer from '$lib/shared_components/Drawer.svelte';
 	import { AppBar, LightSwitch, Toast, initializeStores } from '@skeletonlabs/skeleton';
 	import { page } from '$app/stores';
 
-	// This enables Toasts Notifications
-	initializeStores();
+	initializeStores(); // stores enable global components like toasts
 </script>
 
 <Toast />
+<Drawer />
 
 <header>
-	<AppBar gridColumns="grid-cols-3" slotDefault="place-self-center" slotTrail="place-content-end">
+	<AppBar
+		class="px-10"
+		gridColumns="grid-cols-3"
+		slotDefault="place-self-center"
+		slotTrail="place-content-end"
+	>
 		<svelte:fragment slot="lead">
 			<a href="/" class="flex flex-row items-center gap-2" data-sveltekit-preload-data="hover">
 				<i class="fa-solid fa-bug leading-none" />
