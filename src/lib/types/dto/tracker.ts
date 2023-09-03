@@ -1,11 +1,12 @@
 import type { BugResponse } from './bug';
 
 export type TrackerRequest = {
-	name: string;
+  name: string;
+  author: string;
 };
 
 export type TrackerResponse = {
-	_id: string;
-	name: string;
-	bugs: BugResponse[];
+  _id: string;
+  name: string;
+  bugs: BugResponse[];
 };
