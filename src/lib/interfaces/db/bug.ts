@@ -1,5 +1,5 @@
 import type { ObjectId } from 'mongodb';
-import type { Priority, Status } from '$lib/types';
+import type { Priority, Status } from '$lib/interfaces/shared';
 
 export type Bug = {
   title: string;

@@ -1,14 +1,13 @@
 <script lang="ts">
-  import type { ActionData, PageData } from './$types';
-  import { Status } from '$lib/types';
+  import { goto } from '$app/navigation';
+  import { Status } from '$lib/interfaces/shared';
   import {
     getDrawerStore,
+    getToastStore,
     type DrawerSettings,
-    type ToastSettings,
-    getToastStore
+    type ToastSettings
   } from '@skeletonlabs/skeleton';
-  import { goto } from '$app/navigation';
-  import type { TrackerResponse } from '$lib/types/dto';
+  import type { ActionData, PageData } from './$types';
 
   export let data: PageData;
   export let form: ActionData;
@@ -57,7 +56,7 @@
   <header class="flex flex-row justify-end">
     <button class="btn variant-soft-primary rounded-md gap-2" on:click={openDrawer}>
       <i class="fa-solid fa-plus" />
-      Create
+      Create Tracker
     </button>
   </header>
 
@@ -75,9 +74,7 @@
                 class="fa-solid"
                 class:fa-calendar-days={status === Status.NOT_STARTED}
                 class:fa-hourglass-half={status === Status.IN_PROGRESS}
-                class:fa-list-check={status === Status.REVIEW}
                 class:fa-circle-check={status === Status.COMPLETED}
-                class:fa-ban={status === Status.CANCELED}
               />
               <p>{tracker.bugs.filter(bug => bug.status === status).length}</p>
             </li>

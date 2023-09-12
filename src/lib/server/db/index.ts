@@ -13,4 +13,8 @@ export async function run() {
   return client.connect();
 }
 
+export function clientInstance() {
+  return client;
+}
+
 export default client.db(DATABASE_KEY);

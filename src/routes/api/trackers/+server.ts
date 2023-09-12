@@ -1,8 +1,10 @@
-import type { Tracker } from '$lib/types/db';
+import { ObjectId } from 'mongodb';
+import { error, json } from '@sveltejs/kit';
+
+import type { Tracker } from '$lib/interfaces/db';
 import type { RequestHandler } from './$types';
 
 import db from '$lib/server/db';
-import { error, json } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async () => {
   const collection = db.collection<Tracker>('trackers');
@@ -27,9 +29,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   const formData = await request.formData();
 
   const name = String(formData.get('name'));
-  const author = session?.user?.email;
+  const authorId = session?.user?.id;
 
-  if (!author) {
+  if (!authorId) {
     throw error(403, { message: "You don't have access to this resource." });
   }
 
@@ -37,7 +39,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     throw error(403, { message: 'Invalid or malformed tracker name.' });
   }
 
-  const tracker: Tracker = { name, author, bugs: [] };
+  const tracker: Tracker = { name, author: new ObjectId(authorId), bugs: [] };
   const collection = db.collection<Tracker>('trackers');
   const result = await collection.insertOne(tracker);
 

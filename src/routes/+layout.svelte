@@ -2,14 +2,28 @@
   import '@fortawesome/fontawesome-free/css/all.min.css';
   import '../app.postcss';
 
-  import Drawer from '$lib/shared_components/Drawer.svelte';
-  import { AppBar, LightSwitch, Toast, initializeStores } from '@skeletonlabs/skeleton';
+  import Drawer from '$lib/components/Drawer.svelte';
+  import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+  import {
+    AppBar,
+    LightSwitch,
+    Modal,
+    Toast,
+    initializeStores,
+    storePopup
+  } from '@skeletonlabs/skeleton';
   import { page } from '$app/stores';
 
-  initializeStores(); // stores enable global components like toasts
+  // stores enable global components like toasts
+  initializeStores();
+
+  // enables pop-up functionality
+  storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 </script>
 
 <Toast />
+<Modal />
+<!-- Drawer is a custom component on top of skeleton drawer -->
 <Drawer />
 
 <header>
