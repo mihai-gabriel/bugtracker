@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import type { TrackerResponse, UserResponse } from '$lib/interfaces/dto';
+  import { goto } from '$app/navigation';
+  import type { BugResponseFull, TrackerResponse, UserResponse } from '$lib/interfaces/dto';
   import { Priority, Status } from '$lib/interfaces/shared';
   import {
     getModalStore,
@@ -13,10 +14,10 @@
     RadioGroup,
     RadioItem
   } from '@skeletonlabs/skeleton';
-  import { onMount } from 'svelte';
 
   export let parent: Record<CssClasses, CssClasses>;
-  export let trackerId: TrackerResponse['_id']; // the tracker we create the bug for
+  export let trackerId: TrackerResponse['_id'];
+  export let bug: BugResponseFull;
   export let users: UserResponse[];
 
   const modalStore = getModalStore();
@@ -28,9 +29,9 @@
   }));
 
   /* Asignee Configuration */
-  let assignee: string;
-  let assigneeInput: string;
-  let assigneeInputImage: string;
+  let assignee: string = bug.assignee._id;
+  let assigneeInput: string = bug.assignee.name ?? '';
+  let assigneeInputImage: string = bug.assignee.image ?? '';
 
   let asigneePopup: PopupSettings = {
     event: 'focus-click',
@@ -45,9 +46,9 @@
   };
 
   /* Reviewer Configuration */
-  let reviewer: string;
-  let reviewerInput: string;
-  let reviewerInputImage: string;
+  let reviewer: string = bug.reviewer._id;
+  let reviewerInput: string = bug.reviewer.name ?? '';
+  let reviewerInputImage: string = bug.reviewer.image ?? '';
 
   let reviewerPopup: PopupSettings = {
     event: 'focus-click',
@@ -62,7 +63,8 @@
   };
 
   /* Priority Configuration */
-  let priorityInput: Priority = $modalStore[0].meta.form?.data?.priority ?? Priority.MINIMAL;
+  let priorityInput: Priority =
+    $modalStore[0].meta.form?.data?.priority ?? bug.priority ?? Priority.LOW;
 
   const priorityColor = (priority: Priority) => {
     switch (priority) {
@@ -80,7 +82,8 @@
   };
 
   /* Status Configuration */
-  let statusInput: Status = $modalStore[0].meta.form?.data?.status ?? Status.NOT_STARTED;
+  let statusInput: Status =
+    $modalStore[0].meta.form?.data?.status ?? bug.status ?? Status.NOT_STARTED;
 
   /* Styling */
   $: parentClasses = `${parent.position} ${parent.background} ${parent.width} \
@@ -91,17 +94,17 @@
   <section class="{parentClasses} p-10">
     {#if $modalStore[0]}
       <header class={parent.regionHeader}>
-        <h3 class="h3">New Bug</h3>
+        <h3 class="h3">{bug.title}</h3>
       </header>
 
-      <form class="space-y-4" action="/trackers/{trackerId}?/createBug" method="POST" use:enhance>
+      <form class="space-y-4" action="/trackers/{trackerId}?/updateBug" method="POST" use:enhance>
         <fieldset class="space-y-2">
           <label for="title">Title:</label>
           <input
             id="title"
             name="title"
             class="input rounded-md"
-            value={$modalStore[0].meta.form?.data?.title ?? ''}
+            value={$modalStore[0].meta.form?.data?.title ?? bug.title}
           />
           {#if $modalStore[0].meta.form?.errors?.title}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.title}</p>
@@ -112,8 +115,8 @@
           <textarea
             id="description"
             name="description"
-            class="textarea rounded-md"
-            value={$modalStore[0].meta.form?.data?.description ?? ''}
+            class="textarea rounded-md min-h-[80%]"
+            value={$modalStore[0].meta.form?.data?.description ?? bug.description}
           />
           {#if $modalStore[0].meta.form?.errors?.description}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.description}</p>
@@ -230,15 +233,15 @@
 
         <hr class="!border-t-1" />
 
-        <div class="flex flex-row gap-3">
-          <button type="submit" class="btn text-white rounded-md variant-filled-primary">
-            {parent.buttonTextSubmit}
-          </button>
-          <button
-            class="btn text-white rounded-md variant-ghost-surface"
-            on:click|preventDefault={modalStore.close}>{parent.buttonTextCancel}</button
-          >
-        </div>
+        <input type="hidden" name="id" value={bug._id} />
+
+        <button type="submit" class="btn text-white rounded-md variant-filled-primary"
+          >{parent.buttonTextSubmit}</button
+        >
+        <button
+          class="btn text-white rounded-md variant-ghost-surface"
+          on:click|preventDefault={modalStore.close}>{parent.buttonTextCancel}</button
+        >
       </form>
 
       <footer class={parent.regionFooter}>

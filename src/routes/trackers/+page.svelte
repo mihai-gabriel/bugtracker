@@ -62,10 +62,7 @@
 
   <div class="flex-row gap-4 space-y-4">
     {#each data.trackers as tracker (tracker._id)}
-      <a
-        href="/trackers/{tracker._id}"
-        class="card card-hover cursor-pointer px-8 py-4 flex justify-between"
-      >
+      <a href="/trackers/{tracker._id}" class="card cursor-pointer px-8 py-4 flex justify-between">
         <h4 class="h4">{tracker.name}</h4>
         <ul class="flex flex-row gap-2">
           {#each Object.values(Status) as status}
