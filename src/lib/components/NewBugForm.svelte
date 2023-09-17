@@ -1,19 +1,19 @@
-<script lang="ts">
+<script lang='ts'>
   import { enhance } from '$app/forms';
   import type { TrackerResponse, UserResponse } from '$lib/interfaces/dto';
   import { Priority, Status } from '$lib/interfaces/shared';
   import {
-    getModalStore,
-    type CssClasses,
     Autocomplete,
     type AutocompleteOption,
+    Avatar,
+    type CssClasses,
+    getModalStore,
     popup,
     type PopupSettings,
-    Avatar,
     RadioGroup,
     RadioItem
   } from '@skeletonlabs/skeleton';
-  import { onMount } from 'svelte';
+  import { formatPriorityText, formatStatusText } from '$lib/utils/formatText';
 
   export let parent: Record<CssClasses, CssClasses>;
   export let trackerId: TrackerResponse['_id']; // the tracker we create the bug for
@@ -88,66 +88,65 @@
 </script>
 
 {#if $modalStore[0]}
-  <section class="{parentClasses} p-10">
+  <section class='{parentClasses} p-10'>
     {#if $modalStore[0]}
       <header class={parent.regionHeader}>
-        <h3 class="h3">New Bug</h3>
+        <h3 class='h3'>New Bug</h3>
       </header>
 
-      <form class="space-y-4" action="/trackers/{trackerId}?/createBug" method="POST" use:enhance>
-        <fieldset class="space-y-2">
-          <label for="title">Title:</label>
+      <form class='space-y-4' action='/trackers/{trackerId}?/createBug' method='POST' use:enhance>
+        <fieldset class='space-y-2'>
+          <label for='title'>Title:</label>
           <input
-            id="title"
-            name="title"
-            class="input rounded-md"
+            id='title'
+            name='title'
+            class='input rounded-md'
             value={$modalStore[0].meta.form?.data?.title ?? ''}
           />
           {#if $modalStore[0].meta.form?.errors?.title}
-            <p class="text-error-500">{$modalStore[0].meta.form?.errors?.title}</p>
+            <p class='text-error-500'>{$modalStore[0].meta.form?.errors?.title}</p>
           {/if}
         </fieldset>
-        <fieldset class="space-y-2">
-          <label for="description">Description:</label>
+        <fieldset class='space-y-2'>
+          <label for='description'>Description:</label>
           <textarea
-            id="description"
-            name="description"
-            class="textarea rounded-md"
-            value={$modalStore[0].meta.form?.data?.description ?? ''}
-          />
+            id='description'
+            name='description'
+            class='textarea rounded-md'
+          >{$modalStore[0].meta.form?.data?.description ?? ''}</textarea>
           {#if $modalStore[0].meta.form?.errors?.description}
-            <p class="text-error-500">{$modalStore[0].meta.form?.errors?.description}</p>
+            <p class='text-error-500'>{$modalStore[0].meta.form?.errors?.description}</p>
           {/if}
         </fieldset>
 
-        <hr class="!border-t-1" />
+        <hr class='!border-t-1' />
 
-        <fieldset class="space-y-2 relative">
-          <label for="assignee">Assignee:</label>
+        <fieldset class='space-y-2 relative'>
+          <label for='assignee'>Assignee:</label>
           <div
-            class="input-group input-group-divider grid-cols-[auto_1fr]"
+            class='input-group input-group-divider grid-cols-[auto_1fr]'
             use:popup={asigneePopup}
           >
-            <div class="input-group-shim">
+            <div class='input-group-shim'>
               {#if assigneeInputImage}
-                <Avatar src={assigneeInputImage} width="w-8" rounded="rounded-full" />
+                <Avatar src={assigneeInputImage} width='w-8' rounded='rounded-full' />
               {:else}
-                <i class="fa-solid fa-user-astronaut fa-lg" />
+                <i class='fa-solid fa-user-astronaut fa-lg' />
               {/if}
             </div>
             <input
-              id="assignee"
-              class="autocomplete"
-              type="search"
+              id='assignee'
+              class='autocomplete'
+              type='search'
               bind:value={assigneeInput}
-              placeholder="Search..."
-              autocomplete="off"
+              placeholder='Search...'
+              autocomplete='off'
             />
           </div>
           <div
-            class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md z-10"
-            tabindex="-1"
-            data-popup="asignee-popup"
+            class='card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md z-10'
+            tabindex='-1'
+            data-popup='asignee-popup'
           >
             <Autocomplete
               bind:input={assigneeInput}
@@ -155,38 +154,38 @@
               on:selection={onAssigneeSelection}
             />
           </div>
-          <input type="hidden" name="assignee" bind:value={assignee} />
+          <input type='hidden' name='assignee' bind:value={assignee} />
           {#if $modalStore[0].meta.form?.errors?.assignee}
-            <p class="text-error-500">{$modalStore[0].meta.form?.errors?.assignee}</p>
+            <p class='text-error-500'>{$modalStore[0].meta.form?.errors?.assignee}</p>
           {/if}
         </fieldset>
 
-        <fieldset class="space-y-2 relative">
-          <label for="reviewer">Reviewer:</label>
+        <fieldset class='space-y-2 relative'>
+          <label for='reviewer'>Reviewer:</label>
           <div
-            class="input-group input-group-divider grid-cols-[auto_1fr]"
+            class='input-group input-group-divider grid-cols-[auto_1fr]'
             use:popup={reviewerPopup}
           >
-            <div class="input-group-shim">
+            <div class='input-group-shim'>
               {#if reviewerInputImage}
-                <Avatar src={reviewerInputImage} width="w-8" rounded="rounded-full" />
+                <Avatar src={reviewerInputImage} width='w-8' rounded='rounded-full' />
               {:else}
-                <i class="fa-solid fa-user-astronaut fa-lg" />
+                <i class='fa-solid fa-user-astronaut fa-lg' />
               {/if}
             </div>
             <input
-              id="reviewer"
-              class="w-full autocomplete"
-              type="search"
+              id='reviewer'
+              class='w-full autocomplete'
+              type='search'
               bind:value={reviewerInput}
-              placeholder="Search..."
-              autocomplete="off"
+              placeholder='Search...'
+              autocomplete='off'
             />
           </div>
           <div
-            class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md"
-            tabindex="-1"
-            data-popup="reviewer-popup"
+            class='card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md'
+            tabindex='-1'
+            data-popup='reviewer-popup'
           >
             <Autocomplete
               bind:input={reviewerInput}
@@ -194,48 +193,48 @@
               on:selection={onReviewerSelection}
             />
           </div>
-          <input type="hidden" name="reviewer" bind:value={reviewer} />
+          <input type='hidden' name='reviewer' bind:value={reviewer} />
           {#if $modalStore[0].meta.form?.errors?.reviewer}
-            <p class="text-error-500">{$modalStore[0].meta.form?.errors?.reviewer}</p>
+            <p class='text-error-500'>{$modalStore[0].meta.form?.errors?.reviewer}</p>
           {/if}
         </fieldset>
 
-        <hr class="!border-t-1" />
+        <hr class='!border-t-1' />
 
-        <fieldset class="space-y-2">
+        <fieldset class='space-y-2'>
           <p>Priority:</p>
           <RadioGroup>
             {#each Object.values(Priority) as priority}
               <RadioItem
                 bind:group={priorityInput}
-                name="priority"
+                name='priority'
                 value={priority}
                 color={priorityColor(priority)}
               >
-                {priority.charAt(0).toUpperCase()}{priority.slice(1).toLowerCase()}
+                {formatPriorityText(priority)}
               </RadioItem>
             {/each}
           </RadioGroup>
         </fieldset>
-        <fieldset class="space-y-2">
+        <fieldset class='space-y-2'>
           <p>Status:</p>
-          <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
+          <RadioGroup active='variant-filled-primary' hover='hover:variant-soft-primary'>
             {#each Object.values(Status) as status}
-              <RadioItem bind:group={statusInput} name="status" value={status}>
-                {status.charAt(0).toUpperCase()}{status.split('_').join(' ').slice(1).toLowerCase()}
+              <RadioItem bind:group={statusInput} name='status' value={status}>
+                {formatStatusText(status)}
               </RadioItem>
             {/each}
           </RadioGroup>
         </fieldset>
 
-        <hr class="!border-t-1" />
+        <hr class='!border-t-1' />
 
-        <div class="flex flex-row gap-3">
-          <button type="submit" class="btn text-white rounded-md variant-filled-primary">
+        <div class='flex flex-row gap-3'>
+          <button type='submit' class='btn text-white rounded-md variant-filled-primary'>
             {parent.buttonTextSubmit}
           </button>
           <button
-            class="btn text-white rounded-md variant-ghost-surface"
+            class='btn text-white rounded-md variant-ghost-surface'
             on:click|preventDefault={modalStore.close}>{parent.buttonTextCancel}</button
           >
         </div>
@@ -243,7 +242,7 @@
 
       <footer class={parent.regionFooter}>
         {#if $modalStore[0].meta.form?.errors?.serverError}
-          <p class="text-error-500">{$modalStore[0].meta.form?.errors?.serverError}</p>
+          <p class='text-error-500'>{$modalStore[0].meta.form?.errors?.serverError}</p>
         {:else}
           <p>Clicking away will reset progress</p>
         {/if}

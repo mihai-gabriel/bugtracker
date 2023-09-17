@@ -1,19 +1,19 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import { goto } from '$app/navigation';
   import type { BugResponseFull, TrackerResponse, UserResponse } from '$lib/interfaces/dto';
   import { Priority, Status } from '$lib/interfaces/shared';
   import {
-    getModalStore,
-    type CssClasses,
     Autocomplete,
     type AutocompleteOption,
+    Avatar,
+    type CssClasses,
+    getModalStore,
     popup,
     type PopupSettings,
-    Avatar,
     RadioGroup,
     RadioItem
   } from '@skeletonlabs/skeleton';
+  import { formatPriorityText, formatStatusText } from '$lib/utils/formatText';
 
   export let parent: Record<CssClasses, CssClasses>;
   export let trackerId: TrackerResponse['_id'];
@@ -28,7 +28,7 @@
     meta: { avatar: user.image ?? '' }
   }));
 
-  /* Asignee Configuration */
+  /* Assignee Configuration */
   let assignee: string = bug.assignee._id;
   let assigneeInput: string = bug.assignee.name ?? '';
   let assigneeInputImage: string = bug.assignee.image ?? '';
@@ -112,12 +112,9 @@
         </fieldset>
         <fieldset class="space-y-2">
           <label for="description">Description:</label>
-          <textarea
-            id="description"
-            name="description"
-            class="textarea rounded-md min-h-[80%]"
-            value={$modalStore[0].meta.form?.data?.description ?? bug.description}
-          />
+          <textarea id="description" name="description" class="textarea rounded-md min-h-[80%]"
+            >{$modalStore[0].meta.form?.data?.description ?? bug.description}</textarea
+          >
           {#if $modalStore[0].meta.form?.errors?.description}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.description}</p>
           {/if}
@@ -215,7 +212,7 @@
                 value={priority}
                 color={priorityColor(priority)}
               >
-                {priority.charAt(0).toUpperCase()}{priority.slice(1).toLowerCase()}
+                {formatPriorityText(priority)}
               </RadioItem>
             {/each}
           </RadioGroup>
@@ -225,7 +222,7 @@
           <RadioGroup active="variant-filled-primary" hover="hover:variant-soft-primary">
             {#each Object.values(Status) as status}
               <RadioItem bind:group={statusInput} name="status" value={status}>
-                {status.charAt(0).toUpperCase()}{status.split('_').join(' ').slice(1).toLowerCase()}
+                {formatStatusText(status)}
               </RadioItem>
             {/each}
           </RadioGroup>
@@ -235,13 +232,14 @@
 
         <input type="hidden" name="id" value={bug._id} />
 
-        <button type="submit" class="btn text-white rounded-md variant-filled-primary"
-          >{parent.buttonTextSubmit}</button
-        >
-        <button
-          class="btn text-white rounded-md variant-ghost-surface"
-          on:click|preventDefault={modalStore.close}>{parent.buttonTextCancel}</button
-        >
+        <div class="flex flex-row gap-6">
+          <button type="submit" class="btn text-white rounded-md variant-filled-primary">
+            {parent.buttonTextSubmit}
+          </button>
+          <button class="btn text-white rounded-md variant-ghost-error" formaction="?/deleteBug">
+            Delete
+          </button>
+        </div>
       </form>
 
       <footer class={parent.regionFooter}>

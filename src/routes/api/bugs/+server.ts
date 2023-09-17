@@ -66,3 +66,40 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
   return json({ success: 'bug updated', _id: upsertedBug.upsertedId });
 };
+
+export const DELETE: RequestHandler = async ({ request, locals }) => {
+  const session = await locals.getSession();
+  const userId = session?.user?.id;
+
+  if (!userId) {
+    throw error(403, { message: "You don't have access to this resource." });
+  }
+
+  const formData = await request.formData();
+  const bugId = String(formData.get('id'));
+  const trackerId = String(formData.get('trackerId'));
+
+  if (!bugId || !trackerId) {
+    throw error(400, { message: 'Bad Request: Invalid Tracker/Bug ID' });
+  }
+
+  const databaseClient = clientInstance();
+  const databaseSession = databaseClient.startSession();
+
+  try {
+    await databaseSession.withTransaction(async () => {
+      const bugCollection = db.collection<Bug>('bugs');
+      const trackerCollection = db.collection<Tracker>('trackers');
+
+      await bugCollection.deleteOne({ _id: new ObjectId(bugId) });
+      await trackerCollection.updateOne(
+        { _id: new ObjectId(trackerId) },
+        { $pull: { bugs: new ObjectId(bugId) } }
+      );
+    });
+  } finally {
+    await databaseSession.endSession();
+  }
+
+  return json({ success: 'bug deleted' });
+};

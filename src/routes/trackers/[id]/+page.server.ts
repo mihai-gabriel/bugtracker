@@ -1,9 +1,9 @@
-import { error, type Actions, fail } from '@sveltejs/kit';
+import { type Actions, error, fail } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { validateBugSchema } from './utils/validateBugSchema';
 import type { BugResponseFull } from '$lib/interfaces/dto';
 
-export const load = (async ({ parent, params }) => {
+export const load = (async ({ parent, params, depends }) => {
   const { trackers, users } = await parent();
   const tracker = trackers.find(tracker_ => tracker_._id === params.id);
 
@@ -21,6 +21,8 @@ export const load = (async ({ parent, params }) => {
 
     return { ...bug, assignee: fullAssignee, reviewer: fullReviewer };
   });
+
+  depends('bugs');
 
   return { tracker, bugs };
 }) satisfies PageServerLoad;
@@ -117,5 +119,43 @@ export const actions: Actions = {
     }
 
     return { success: 'bug updated' };
+  },
+  deleteBug: async ({ request, locals, fetch, params }) => {
+    // Check the validity of the user
+    const session = await locals.getSession();
+    const userInfo = session?.user;
+
+    // TODO: Implement role-based authorization
+    if (!userInfo) {
+      throw error(403, { message: "Authorization Error: You don't have access to this resource." });
+    }
+
+    // Check if trackerId is non-null
+    const trackerId = params['id'];
+
+    if (!trackerId) {
+      throw error(403, { message: 'URL Error: Invalid tracker ID' });
+    }
+
+    const formData = await request.formData();
+
+    // Attach trackerId to formData
+    formData.append('trackerId', trackerId);
+
+    // Create the entry in database
+    const response = await fetch('/api/bugs', {
+      method: 'DELETE',
+      body: formData
+    });
+
+    const responseData = await response.json();
+
+    if (response.status !== 200 && responseData?.message) {
+      const errors = { serverError: responseData.message };
+
+      return fail(400, { errors });
+    }
+
+    return { success: 'bug deleted' };
   }
 };

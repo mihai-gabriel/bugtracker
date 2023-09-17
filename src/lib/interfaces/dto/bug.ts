@@ -5,6 +5,7 @@ import type { UserResponse } from './user';
 
 // asignee and reviewer should be ObjectId-Like strings
 export type BugRequest = {
+  id: string;
   title: string;
   description: string;
   assignee: string;
