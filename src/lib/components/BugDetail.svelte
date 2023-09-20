@@ -93,6 +93,7 @@
 {#if $modalStore[0]}
   <section class="{parentClasses} p-10">
     {#if $modalStore[0]}
+      <p class="text-right"><kbd class="kbd">Esc</kbd> or click away to close modal</p>
       <header class={parent.regionHeader}>
         <h3 class="h3">{bug.title}</h3>
       </header>
@@ -245,8 +246,6 @@
       <footer class={parent.regionFooter}>
         {#if $modalStore[0].meta.form?.errors?.serverError}
           <p class="text-error-500">{$modalStore[0].meta.form?.errors?.serverError}</p>
-        {:else}
-          <p>Clicking away will reset progress</p>
         {/if}
       </footer>
     {/if}

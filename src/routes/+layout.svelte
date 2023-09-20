@@ -3,22 +3,26 @@
   import '../app.postcss';
 
   import Drawer from '$lib/components/Drawer.svelte';
-  import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+  import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
   import {
     AppBar,
+    initializeStores,
     LightSwitch,
     Modal,
-    Toast,
-    initializeStores,
-    storePopup
+    storePopup,
+    Toast
   } from '@skeletonlabs/skeleton';
   import { page } from '$app/stores';
+  import { generateBreadcrumbs } from '$lib/utils/breadcrumbs';
 
   // stores enable global components like toasts
   initializeStores();
 
   // enables pop-up functionality
   storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
+
+  // Generate breadcrumbs for current page
+  $: breadcrumbs = $page.route.id ? generateBreadcrumbs($page.route.id, $page.params) : [];
 </script>
 
 <Toast />
@@ -55,6 +59,18 @@
   </AppBar>
 </header>
 
-<main class="container mx-auto px-4 py-8">
+<main class="container mx-auto flex-col space-y-8 px-4 py-8">
+  <ol class="breadcrumb">
+    {#each breadcrumbs as breadcrumb, index (index)}
+      {#if index === breadcrumbs.length - 1}
+        <li class="crumb">{breadcrumb.name}</li>
+      {:else}
+        <li class="crumb">
+          <a class="btn btn-sm variant-soft-primary" href={breadcrumb.path}>{breadcrumb.name}</a>
+        </li>
+        <li class="crumb-separator" aria-hidden="true">&rsaquo;</li>
+      {/if}
+    {/each}
+  </ol>
   <slot />
 </main>

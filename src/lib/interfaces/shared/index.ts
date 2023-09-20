@@ -11,3 +11,8 @@ export enum Status {
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED'
 }
+
+export type Breadcrumb = {
+  name: string;
+  path: string;
+};
