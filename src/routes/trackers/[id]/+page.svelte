@@ -1,25 +1,26 @@
 <script lang="ts">
-  import BugDetail from '$lib/components/BugDetail.svelte';
-  import NewBugForm from '$lib/components/NewBugForm.svelte';
-  import { Status } from '$lib/interfaces/shared';
+  import BugDetail from "$lib/components/BugDetail.svelte";
+  import NewBugForm from "$lib/components/NewBugForm.svelte";
+  import { Status } from "$lib/interfaces/shared";
   import {
     getModalStore,
     ListBox,
     ListBoxItem,
     type ModalComponent,
     type ModalSettings
-  } from '@skeletonlabs/skeleton';
-  import { quadInOut } from 'svelte/easing';
-  import { fly } from 'svelte/transition';
-  import type { ActionData, PageData } from './$types';
-  import BugList from '$lib/components/BugList.svelte';
-  import type { ComponentEvents } from 'svelte';
-  import { getColsClassByCount } from './utils/getColsClassByCount';
-  import { formatStatusText } from '$lib/utils/formatText';
-  import { sortPredicateBugPriority, sortPredicateStatus } from './utils/sortPredicates';
-  import type { BugRequest } from '$lib/interfaces/dto';
-  import { loadFormDataFromObject } from '$lib/utils/formDataInit';
-  import { invalidate } from '$app/navigation';
+  } from "@skeletonlabs/skeleton";
+  import { quadInOut } from "svelte/easing";
+  import { fly } from "svelte/transition";
+  import type { ActionData, PageData } from "./$types";
+  import BugList from "$lib/components/BugList.svelte";
+  import type { ComponentEvents } from "svelte";
+  import { getColsClassByCount } from "./utils/getColsClassByCount";
+  import { formatStatusText } from "$lib/utils/formatText";
+  import { sortPredicateBugPriority, sortPredicateStatus } from "./utils/sortPredicates";
+  import type { BugRequest } from "$lib/interfaces/dto";
+  import { loadFormDataFromObject } from "$lib/utils/formDataInit";
+  import { invalidate } from "$app/navigation";
+  import { page } from "$app/stores";
 
   export let data: PageData;
   export let form: ActionData;
@@ -33,7 +34,7 @@
     };
 
     const modal: ModalSettings = {
-      type: 'component',
+      type: "component",
       component: newBugModal,
       meta: { form },
       response: () => {
@@ -49,16 +50,21 @@
     modalStore.trigger(modal);
   };
 
-  const openDetails = (event: ComponentEvents<BugList>['selectBug']) => {
+  const openDetails = (event: ComponentEvents<BugList>["selectBug"]) => {
     const selectedBug = data.bugs.find(bug => bug._id === event.detail.id);
 
     const bugDetailModal: ModalComponent = {
       ref: BugDetail,
-      props: { bug: selectedBug, trackerId: data.tracker._id, users: data.users }
+      props: {
+        bug: selectedBug,
+        trackerId: data.tracker._id,
+        users: data.users,
+        currentUrl: $page.url.pathname
+      }
     };
 
     const modal: ModalSettings = {
-      type: 'component',
+      type: "component",
       component: bugDetailModal,
       meta: { form },
       response: () => {
@@ -108,16 +114,15 @@
   // Drag And Drop
   let columnHovered: Status | null;
 
-  const dragStart = (event: ComponentEvents<BugList>['dragStart']) => {
+  const dragStart = (event: ComponentEvents<BugList>["dragStart"]) => {
     const { bugId, dragEvent } = event.detail;
 
-    const data = { bugId };
-    dragEvent.dataTransfer.setData('text/plain', JSON.stringify(data));
-    dragEvent.dataTransfer.dropEffect = 'link';
+    dragEvent.dataTransfer.setData("text/plain", JSON.stringify({ bugId }));
+    dragEvent.dataTransfer.dropEffect = "link";
   };
 
   const drop = async (event: DragEvent, status: Status) => {
-    const dragData = event.dataTransfer?.getData('text/plain');
+    const dragData = event.dataTransfer?.getData("text/plain");
 
     if (dragData) {
       const { bugId } = JSON.parse(dragData);
@@ -133,17 +138,19 @@
         };
 
         const formData = loadFormDataFromObject(updatedBug);
-        await fetch('/api/bugs', { method: 'PUT', body: formData });
-        await invalidate('bugs');
+        await fetch("/api/bugs", { method: "PUT", body: formData });
+        await invalidate("bugs");
       }
     }
 
     columnHovered = null;
   };
+
+  $: gridColumnsClass = getColsClassByCount(statusInput.length);
 </script>
 
 <section class="space-y-4">
-  <header class="flex flex-row justify-between">
+  <header class="flex flex-row justify-between items-center">
     <h3 class="h3">{data.tracker.name}</h3>
     <div class="flex flex-row gap-4 items-center">
       {#if statusInput.length !== 0}
@@ -175,11 +182,7 @@
     </div>
   </header>
 
-  <main
-    class="grid transition-all ease-out duration-150 {getColsClassByCount(
-      statusInput.length
-    )} gap-6"
-  >
+  <main class="grid {gridColumnsClass} transition-all ease-out duration-150 gap-6">
     {#each columnsByStatus as status (Object.values(Status).indexOf(status))}
       <div class="flex flex-col space-y-4" in:fly={{ duration: 300, easing: quadInOut }}>
         <h5 class="h5">{formatStatusText(status)}</h5>

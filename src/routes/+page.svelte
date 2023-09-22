@@ -1,10 +1,8 @@
-<script>
-  import { signIn, signOut } from '@auth/sveltekit/client';
-  import { page } from '$app/stores';
+<script lang="ts">
 </script>
 
-<nav class="list-nav max-w-lg mx-auto">
-  <h3 class="h3 mb-2">Navigation</h3>
+<nav class="list-nav max-w-lg mx-auto flex flex-col space-y-2">
+  <h4 class="h4 mb-2">Navigation</h4>
   <ul>
     <li>
       <a href="/trackers">
@@ -15,11 +13,11 @@
       </a>
     </li>
     <li>
-      <a href="/assigned-bugs">
+      <a href="/bugs">
         <span class="badge bg-error-500">
           <i class="fa-solid fa-bug" />
         </span>
-        <span class="flex-auto">Assigned bugs</span>
+        <span class="flex-auto">Assigned Bugs</span>
       </a>
     </li>
   </ul>

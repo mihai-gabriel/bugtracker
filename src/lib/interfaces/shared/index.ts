@@ -16,3 +16,13 @@ export type Breadcrumb = {
   name: string;
   path: string;
 };
+
+// DRAFT:
+/**
+ * READ: Can see the tracker / bugs
+ * EDIT: Can edit bugs
+ * DELETE: Can delete bugs
+ *
+ * Note: Only the author of the tracker can edit / delete it.
+ */
+export type Permission = 'READ' | 'EDIT' | 'DELETE';

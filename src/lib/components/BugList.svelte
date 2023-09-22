@@ -37,10 +37,10 @@
   {#each bugs as bug (bug._id)}
     <li
       class:pointer-events-none={hoveringOver}
+      draggable={true}
       in:receive={{ key: bug._id }}
       out:send={{ key: bug._id }}
       animate:flip={{ duration: 100 }}
-      draggable={true}
       on:dragstart={event => dragStart(event, bug._id)}
     >
       <BugField

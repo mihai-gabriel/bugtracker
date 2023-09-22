@@ -1,5 +1,6 @@
-import type { Priority, Status } from '$lib/interfaces/shared';
-import type { UserResponse } from './user';
+import type { Priority, Status } from "$lib/interfaces/shared";
+import type { UserResponse } from "./user";
+import type { TrackerResponse } from "$lib/interfaces/dto/tracker";
 
 // TODO: Provide explanations / description for each field
 
@@ -34,4 +35,8 @@ export type BugResponseFull = {
   reviewer: UserResponse;
   priority: Priority;
   status: Status;
+};
+
+export type BugResponseFullWithTracker = BugResponseFull & {
+  tracker: Partial<TrackerResponse>;
 };

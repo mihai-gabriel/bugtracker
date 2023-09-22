@@ -1,9 +1,7 @@
 <script lang="ts">
-  import '@fortawesome/fontawesome-free/css/all.min.css';
-  import '../app.postcss';
-
-  import Drawer from '$lib/components/Drawer.svelte';
-  import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
+  import "@fortawesome/fontawesome-free/css/all.min.css";
+  import "../app.postcss";
+  import { arrow, autoUpdate, computePosition, flip, offset, shift } from "@floating-ui/dom";
   import {
     AppBar,
     initializeStores,
@@ -11,9 +9,10 @@
     Modal,
     storePopup,
     Toast
-  } from '@skeletonlabs/skeleton';
-  import { page } from '$app/stores';
-  import { generateBreadcrumbs } from '$lib/utils/breadcrumbs';
+  } from "@skeletonlabs/skeleton";
+  import { page } from "$app/stores";
+  import { generateBreadcrumbs } from "$lib/utils/breadcrumbs";
+  import Drawer from "$lib/components/Drawer.svelte";
 
   // stores enable global components like toasts
   initializeStores();
@@ -23,6 +22,8 @@
 
   // Generate breadcrumbs for current page
   $: breadcrumbs = $page.route.id ? generateBreadcrumbs($page.route.id, $page.params) : [];
+
+  const excludedRoutes = ["/", "/auth"];
 </script>
 
 <Toast />
@@ -50,7 +51,6 @@
         class="btn"
         class:variant-ghost-tertiary={$page.data.session}
         class:variant-ghost-surface={$page.data.session === null}
-        data-sveltekit-preload-data="hover"
       >
         <i class="fa-brands fa-github-alt fa-lg leading-none" />
       </a>
@@ -61,16 +61,18 @@
 
 <main class="container mx-auto flex-col space-y-8 px-4 py-8">
   <ol class="breadcrumb">
-    {#each breadcrumbs as breadcrumb, index (index)}
-      {#if index === breadcrumbs.length - 1}
-        <li class="crumb">{breadcrumb.name}</li>
-      {:else}
-        <li class="crumb">
-          <a class="btn btn-sm variant-soft-primary" href={breadcrumb.path}>{breadcrumb.name}</a>
-        </li>
-        <li class="crumb-separator" aria-hidden="true">&rsaquo;</li>
-      {/if}
-    {/each}
+    {#if !excludedRoutes.includes($page.route.id ?? "")}
+      {#each breadcrumbs as breadcrumb, index (index)}
+        {#if index === breadcrumbs.length - 1}
+          <li class="crumb">{breadcrumb.name}</li>
+        {:else}
+          <li class="crumb">
+            <a class="btn btn-sm variant-soft-primary" href={breadcrumb.path}>{breadcrumb.name}</a>
+          </li>
+          <li class="crumb-separator" aria-hidden="true">&rsaquo;</li>
+        {/if}
+      {/each}
+    {/if}
   </ol>
   <slot />
 </main>

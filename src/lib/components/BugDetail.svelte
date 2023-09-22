@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
-  import type { BugResponseFull, TrackerResponse, UserResponse } from '$lib/interfaces/dto';
-  import { Priority, Status } from '$lib/interfaces/shared';
+  import { enhance } from "$app/forms";
+  import type { BugResponseFull, TrackerResponse, UserResponse } from "$lib/interfaces/dto";
+  import { Priority, Status } from "$lib/interfaces/shared";
   import {
     Autocomplete,
     type AutocompleteOption,
@@ -12,31 +12,32 @@
     type PopupSettings,
     RadioGroup,
     RadioItem
-  } from '@skeletonlabs/skeleton';
-  import { formatPriorityText, formatStatusText } from '$lib/utils/formatText';
+  } from "@skeletonlabs/skeleton";
+  import { formatPriorityText, formatStatusText } from "$lib/utils/formatText";
 
+  export let currentUrl: string;
   export let parent: Record<CssClasses, CssClasses>;
-  export let trackerId: TrackerResponse['_id'];
+  export let trackerId: TrackerResponse["_id"];
   export let bug: BugResponseFull;
   export let users: UserResponse[];
 
   const modalStore = getModalStore();
 
   const usersSelectOptions: AutocompleteOption[] = users.map(user => ({
-    label: user.name ?? '',
-    value: user._id ?? '',
-    meta: { avatar: user.image ?? '' }
+    label: user.name ?? "",
+    value: user._id ?? "",
+    meta: { avatar: user.image ?? "" }
   }));
 
   /* Assignee Configuration */
   let assignee: string = bug.assignee._id;
-  let assigneeInput: string = bug.assignee.name ?? '';
-  let assigneeInputImage: string = bug.assignee.image ?? '';
+  let assigneeInput: string = bug.assignee.name ?? "";
+  let assigneeInputImage: string = bug.assignee.image ?? "";
 
   let asigneePopup: PopupSettings = {
-    event: 'focus-click',
-    target: 'asignee-popup',
-    placement: 'bottom'
+    event: "focus-click",
+    target: "asignee-popup",
+    placement: "bottom"
   };
 
   const onAssigneeSelection = (event: CustomEvent<AutocompleteOption>): void => {
@@ -47,13 +48,13 @@
 
   /* Reviewer Configuration */
   let reviewer: string = bug.reviewer._id;
-  let reviewerInput: string = bug.reviewer.name ?? '';
-  let reviewerInputImage: string = bug.reviewer.image ?? '';
+  let reviewerInput: string = bug.reviewer.name ?? "";
+  let reviewerInputImage: string = bug.reviewer.image ?? "";
 
   let reviewerPopup: PopupSettings = {
-    event: 'focus-click',
-    target: 'reviewer-popup',
-    placement: 'bottom'
+    event: "focus-click",
+    target: "reviewer-popup",
+    placement: "bottom"
   };
 
   const onReviewerSelection = (event: CustomEvent<AutocompleteOption>): void => {
@@ -69,15 +70,15 @@
   const priorityColor = (priority: Priority) => {
     switch (priority) {
       case Priority.MINIMAL:
-        return 'variant-filled-surface';
+        return "variant-filled-surface";
       case Priority.LOW:
-        return 'variant-filled-tertiary';
+        return "variant-filled-tertiary";
       case Priority.MODERATE:
-        return 'variant-filled-secondary';
+        return "variant-filled-secondary";
       case Priority.HIGH:
-        return 'variant-filled-warning';
+        return "variant-filled-warning";
       case Priority.CRITICAL:
-        return 'variant-filled-error';
+        return "variant-filled-error";
     }
   };
 
@@ -95,7 +96,9 @@
     {#if $modalStore[0]}
       <p class="text-right"><kbd class="kbd">Esc</kbd> or click away to close modal</p>
       <header class={parent.regionHeader}>
-        <h3 class="h3">{bug.title}</h3>
+        <a href="/bugs/{bug._id}?from={currentUrl}" on:click={modalStore.close}>
+          <h3 class="h3 hover:underline">{bug.title} <i class="fa-solid fa-link fa-xs" /></h3>
+        </a>
       </header>
 
       <form class="space-y-4" action="/trackers/{trackerId}?/updateBug" method="POST" use:enhance>

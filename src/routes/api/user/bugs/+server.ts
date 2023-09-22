@@ -1,13 +1,13 @@
-import type { Bug } from '$lib/interfaces/db';
-import db from '$lib/server/db';
-import { error, json } from '@sveltejs/kit';
-import { ObjectId } from 'mongodb';
-import type { RequestHandler } from './$types';
+import type { Bug } from "$lib/interfaces/db";
+import db from "$lib/server/db";
+import { error, json } from "@sveltejs/kit";
+import { ObjectId } from "mongodb";
+import type { RequestHandler } from "./$types";
 
 /**
  * Retrieves from db all the bugs that have been assigned to the current authenticated user.
  *
- * @returns list of bugs where the user is 'asignee' or 'reviewer'. Later on, (TODO:) bugs will be separated.
+ * @returns list of bugs where the user is 'assignee' or 'reviewer'.
  */
 export const GET: RequestHandler = async ({ locals }) => {
   const session = await locals.getSession();
@@ -17,11 +17,43 @@ export const GET: RequestHandler = async ({ locals }) => {
     throw error(403, { message: "You don't have access to this resource." });
   }
 
-  const collection = db.collection<Bug>('bugs');
+  const collection = db.collection<Bug>("bugs");
   const bugsAssignedToUser = await collection
-    .find({
-      $or: [{ assignee: new ObjectId(userId) }, { reviewer: new ObjectId(userId) }]
-    })
+    .aggregate([
+      {
+        $match: {
+          $or: [{ assignee: new ObjectId(userId) }, { reviewer: new ObjectId(userId) }]
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "reviewer",
+          foreignField: "_id",
+          as: "reviewer"
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "assignee",
+          foreignField: "_id",
+          as: "assignee"
+        }
+      },
+      { $unwind: "$reviewer" },
+      { $unwind: "$assignee" },
+      {
+        $lookup: {
+          from: "trackers",
+          localField: "_id",
+          foreignField: "bugs",
+          as: "tracker"
+        }
+      },
+      { $unwind: "$tracker" },
+      { $project: { tracker: { bugs: false, author: false } } }
+    ])
     .toArray();
 
   return json(bugsAssignedToUser);

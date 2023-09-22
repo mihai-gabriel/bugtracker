@@ -1,4 +1,4 @@
-import type { BugResponse } from './bug';
+import type { BugResponse } from "./bug";
 
 export type TrackerRequest = {
   name: string;
@@ -8,5 +8,6 @@ export type TrackerRequest = {
 export type TrackerResponse = {
   _id: string;
   name: string;
+  author: string;
   bugs: BugResponse[];
 };

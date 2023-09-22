@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Priority } from '$lib/interfaces/shared';
-  import type { UserResponse } from '$lib/interfaces/dto';
-  import { Avatar } from '@skeletonlabs/skeleton';
+  import { Priority } from "$lib/interfaces/shared";
+  import type { UserResponse } from "$lib/interfaces/dto";
+  import { Avatar } from "@skeletonlabs/skeleton";
 
   export let title: string;
   export let assignee: UserResponse;
@@ -18,8 +18,8 @@
   class:border-secondary-400={priority === Priority.MODERATE}
   class:border-warning-400={priority === Priority.HIGH}
   class:border-error-400={priority === Priority.CRITICAL}
-  on:click
   role="button"
+  on:click
   tabindex="0"
 >
   <div class="max-w-[150px] w-[25%]">
@@ -31,7 +31,7 @@
   <div class="flex flex-row space-x-6 items-center">
     <div class="flex flex-row space-x-2 items-center">
       <Avatar
-        src={assignee.image ?? ''}
+        src={assignee.image ?? ""}
         width="w-8"
         rounded="rounded-full"
         border="border-2 border-cyan-700"
@@ -39,7 +39,7 @@
     </div>
     <div class="flex flex-row space-x-2 items-center">
       <Avatar
-        src={reviewer.image ?? ''}
+        src={reviewer.image ?? ""}
         width="w-8"
         rounded="rounded-full"
         border="border-2 border-purple-700"
