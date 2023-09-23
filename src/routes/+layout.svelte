@@ -67,7 +67,9 @@
           <li class="crumb">{breadcrumb.name}</li>
         {:else}
           <li class="crumb">
-            <a class="btn btn-sm variant-soft-primary" href={breadcrumb.path}>{breadcrumb.name}</a>
+            <a class="btn btn-sm variant-soft-primary rounded-xl" href={breadcrumb.path}
+              >{breadcrumb.name}</a
+            >
           </li>
           <li class="crumb-separator" aria-hidden="true">&rsaquo;</li>
         {/if}

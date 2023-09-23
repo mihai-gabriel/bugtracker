@@ -2,6 +2,7 @@ import type { RequestHandler } from "@sveltejs/kit";
 import { error, json } from "@sveltejs/kit";
 import db from "$lib/server/db";
 import type { Bug } from "$lib/interfaces/db";
+import { ObjectId } from "mongodb";
 
 export const GET: RequestHandler = async ({ locals, params }) => {
   const session = await locals.getSession();
@@ -14,12 +15,13 @@ export const GET: RequestHandler = async ({ locals, params }) => {
   const bugId = params["id"];
 
   if (!bugId) {
-    throw error(400, "");
+    throw error(400, "Bad Request: Invalid Bug ID");
   }
 
   const bugCollection = db.collection<Bug>("bugs");
   const bug = await bugCollection
     .aggregate([
+      { $match: { _id: new ObjectId(bugId) } },
       {
         $lookup: {
           from: "users",
@@ -37,7 +39,17 @@ export const GET: RequestHandler = async ({ locals, params }) => {
         }
       },
       { $unwind: "$reviewer" },
-      { $unwind: "$assignee" }
+      { $unwind: "$assignee" },
+      {
+        $lookup: {
+          from: "trackers",
+          localField: "_id",
+          foreignField: "bugs",
+          as: "tracker"
+        }
+      },
+      { $unwind: "$tracker" },
+      { $project: { tracker: { bugs: false, author: false } } }
     ])
     .next();
 
