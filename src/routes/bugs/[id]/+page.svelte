@@ -15,9 +15,20 @@
     RadioItem
   } from "@skeletonlabs/skeleton";
   import { enhance } from "$app/forms";
+  import SvelteMarkdown from "svelte-markdown";
+  import { onMount } from "svelte";
+  import type { SubmitFunction } from "@sveltejs/kit";
 
   export let data: PageData;
   export let form: ActionData;
+
+  // Avoiding TS errors / mental gymnastics
+  let DOMPurify: { sanitize: (text: string, options: object) => string } | undefined = undefined;
+
+  onMount(async () => {
+    const module = await import("dompurify");
+    DOMPurify = module.default;
+  });
 
   const modalStore = getModalStore();
 
@@ -120,9 +131,39 @@
   let editingPriority = false;
 
   let titleInput = data.bug.title;
-  let descriptionInput = data.bug.description;
   let statusInput = data.bug.status;
   let priorityInput = data.bug.priority;
+
+  /* Description handlers */
+  let descriptionElement: HTMLTextAreaElement;
+  let descriptionInput = data.bug.description;
+
+  const boldModifier = (text: string) => `**${text}**`;
+  const italicModifier = (text: string) => `*${text}*`;
+  const heading1Modifier = (text: string) => `# ${text}`;
+  const heading2Modifier = (text: string) => `## ${text}`;
+  const heading3Modifier = (text: string) => `### ${text}`;
+  const heading4Modifier = (text: string) => `#### ${text}`;
+  const heading5Modifier = (text: string) => `##### ${text}`;
+  const heading6Modifier = (text: string) => `###### ${text}`;
+  const codeModifier = (text: string) => `\`${text}\``;
+
+  const replaceSelection = (modifier: (selection: string) => string): void => {
+    const selectedText = descriptionElement.value.substring(
+      descriptionElement.selectionStart,
+      descriptionElement.selectionEnd
+    );
+
+    if (selectedText) {
+      const beforeSelection = descriptionElement.value.substring(
+        0,
+        descriptionElement.selectionStart
+      );
+      const afterSelection = descriptionElement.value.substring(descriptionElement.selectionEnd);
+
+      descriptionInput = `${beforeSelection}${modifier(selectedText)}${afterSelection}`;
+    }
+  };
 
   /* Asignee & Reviewer options */
   const usersSelectOptions: AutocompleteOption[] = data.users.map(user => ({
@@ -184,6 +225,12 @@
     reviewer = data.bug.reviewer._id;
     reviewerInput = data.bug.reviewer.name ?? "";
     reviewerInputImage = data.bug.reviewer.image ?? "";
+
+    form = {
+      data: {},
+      errors: undefined,
+      success: undefined
+    };
   };
 
   $: formActive =
@@ -195,17 +242,34 @@
     editingPriority;
 
   $: formErrors = form?.errors as Record<string, string[]>;
+
+  const submitForm: SubmitFunction = ({ formData }) => {
+    // if DOMPurify is available, sanitize the input that's about to be sent to the server.
+    if (DOMPurify) {
+      const description = String(formData.get("description"));
+      const sanitizedDescription = DOMPurify.sanitize(description, {
+        USE_PROFILES: { html: false }
+      });
+
+      formData.set("description", sanitizedDescription);
+      descriptionInput = sanitizedDescription;
+    }
+
+    inactivateForm();
+  };
 </script>
 
-<div class="rounded-sm px-4 py-2 text-center {statusBarColor()}">
-  {#if form?.errors}
-    <p>Form Error <span class="text-slate-400">(fields reverted)</span></p>
-  {:else}
-    <p>{formActive ? "Pending Changes" : formatStatusText(data.bug.status)}</p>
-  {/if}
-</div>
+{#if form?.errors || formActive || data.bug.status === Status.COMPLETED}
+  <div class="rounded-sm px-4 py-2 text-center {statusBarColor()}">
+    {#if form?.errors}
+      <p>Form Error <span class="text-slate-400">(fields reverted)</span></p>
+    {:else}
+      <p>{formActive ? "Pending Changes" : formatStatusText(data.bug.status)}</p>
+    {/if}
+  </div>
+{/if}
 
-<form class="flex flex-col gap-6" method="POST" use:enhance={inactivateForm}>
+<form class="flex flex-col gap-6" method="POST" use:enhance={submitForm}>
   <header
     class="flex flex-col gap-2 px-4 py-2 rounded-md bg-gradient-to-t {currentStatusGradient()}"
   >
@@ -286,9 +350,6 @@
         <span>Delete</span>
       </span>
     </div>
-    <div>
-      <!--    <span class="card">{formatPriorityText(data.bug.priority)}</span>-->
-    </div>
   </header>
 
   <main class="flex flex-row gap-4">
@@ -308,14 +369,120 @@
           </button>
         </header>
         {#if editingDescription}
-          <input
-            class="input my-2 rounded-md variant-ghost-surface"
-            type="text"
+          <div>
+            <p class="text-slate-200">Make a text selection and choose a format modifier</p>
+          </div>
+          <div class="flex flex-row gap-2">
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+              class="chip variant-glass font-bold"
+              on:click={() => replaceSelection(boldModifier)}
+              role="button"
+              tabindex="0"
+            >
+              B
+            </span>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+              class="chip variant-glass italic"
+              on:click={() => replaceSelection(italicModifier)}
+              role="button"
+              tabindex="0"
+            >
+              I
+            </span>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+              class="chip variant-glass"
+              on:click={() => replaceSelection(heading1Modifier)}
+              role="button"
+              tabindex="0"
+            >
+              H1
+            </span>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+              class="chip variant-glass"
+              on:click={() => replaceSelection(heading2Modifier)}
+              role="button"
+              tabindex="0"
+            >
+              H2
+            </span>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+              class="chip variant-glass"
+              on:click={() => replaceSelection(heading3Modifier)}
+              role="button"
+              tabindex="0"
+            >
+              H3
+            </span>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+              class="chip variant-glass"
+              on:click={() => replaceSelection(heading4Modifier)}
+              role="button"
+              tabindex="0"
+            >
+              H4
+            </span>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+              class="chip variant-glass"
+              on:click={() => replaceSelection(heading5Modifier)}
+              role="button"
+              tabindex="0"
+            >
+              H5
+            </span>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+              class="chip variant-glass"
+              on:click={() => replaceSelection(heading6Modifier)}
+              role="button"
+              tabindex="0"
+            >
+              H6
+            </span>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <span
+              class="chip variant-glass"
+              on:click={() => replaceSelection(codeModifier)}
+              role="button"
+              tabindex="0"
+            >
+              Code
+            </span>
+          </div>
+          <textarea
+            class="textarea my-2 rounded-md variant-ghost-surface"
+            rows={4}
+            bind:this={descriptionElement}
             bind:value={descriptionInput}
             name="description"
           />
+          <p class="text-slate-400">
+            Use <a
+              class="text-blue-500"
+              href="https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax"
+              target="_blank">Markdown</a
+            > to format the text
+          </p>
         {:else}
-          <p>{data.bug.description}</p>
+          {#key data.bug.description}
+            {#if DOMPurify}
+              <div id="description-markdown">
+                <SvelteMarkdown
+                  source={DOMPurify.sanitize(data.bug.description, {
+                    USE_PROFILES: { html: false }
+                  })}
+                />
+              </div>
+            {:else}
+              <p>Markdown loading...</p>
+            {/if}
+          {/key}
           <input type="hidden" value={data.bug.description} name="description" />
         {/if}
       </article>
@@ -515,3 +682,35 @@
     </div>
   </main>
 </form>
+
+<style>
+  #description-markdown {
+    & h1 {
+      @apply h1;
+    }
+
+    & h2 {
+      @apply h2;
+    }
+
+    & h3 {
+      @apply h3;
+    }
+
+    & h4 {
+      @apply h4;
+    }
+
+    & h5 {
+      @apply h5;
+    }
+
+    & h6 {
+      @apply h6;
+    }
+
+    & ul {
+      @apply list-disc list-inside;
+    }
+  }
+</style>

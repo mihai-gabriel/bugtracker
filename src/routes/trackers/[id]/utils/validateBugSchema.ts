@@ -19,7 +19,6 @@ export function validateBugSchema(formData: FormData) {
 
   if (!result.success) {
     errors = result.error.flatten().fieldErrors as Record<string, unknown>;
-    console.log(errors);
   }
 
   return { errors };
