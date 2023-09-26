@@ -14,6 +14,7 @@
   import type { ActionData, PageData } from "./$types";
   import BugList from "$lib/components/BugList.svelte";
   import type { ComponentEvents } from "svelte";
+  import { onMount } from "svelte";
   import { getColsClassByCount } from "./utils/getColsClassByCount";
   import { formatStatusText } from "$lib/utils/formatText";
   import { sortPredicateBugPriority, sortPredicateStatus } from "./utils/sortPredicates";
@@ -147,6 +148,12 @@
   };
 
   $: gridColumnsClass = getColsClassByCount(statusInput.length);
+
+  onMount(() => {
+    if ($page.url.searchParams.get("action") === "create-bug") {
+      openCreateForm();
+    }
+  });
 </script>
 
 <section class="space-y-4">

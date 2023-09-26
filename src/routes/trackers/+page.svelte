@@ -1,13 +1,15 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { Status } from '$lib/interfaces/shared';
+  import { goto } from "$app/navigation";
+  import { Status } from "$lib/interfaces/shared";
   import {
+    type DrawerSettings,
     getDrawerStore,
     getToastStore,
-    type DrawerSettings,
     type ToastSettings
-  } from '@skeletonlabs/skeleton';
-  import type { ActionData, PageData } from './$types';
+  } from "@skeletonlabs/skeleton";
+  import type { ActionData, PageData } from "./$types";
+  import { onMount } from "svelte";
+  import { page } from "$app/stores";
 
   export let data: PageData;
   export let form: ActionData;
@@ -15,15 +17,17 @@
   const drawerStore = getDrawerStore();
   const toastStore = getToastStore();
 
+  let bugCreationMode = false;
+
   const openDrawer = () => {
     const drawerSettings: DrawerSettings = {
-      id: 'create-tracker',
+      id: "create-tracker",
       meta: { form },
       // styling
-      position: 'right',
-      width: 'w-[280px] md:w-[480px]',
-      rounded: 'rounded-xl',
-      blur: 'backdrop-blur-sm'
+      position: "right",
+      width: "w-[280px] md:w-[480px]",
+      rounded: "rounded-xl",
+      blur: "backdrop-blur-sm"
     };
 
     drawerStore.open(drawerSettings);
@@ -35,9 +39,9 @@
 
       if (trackerId) {
         const t: ToastSettings = {
-          message: 'Tracker created.',
+          message: "Tracker created.",
           action: {
-            label: 'Open',
+            label: "Open",
             response: () => goto(`/trackers/${trackerId}`)
           }
         };
@@ -50,10 +54,30 @@
 
   // Update the drawer state whenever the form data changes
   $: drawerStore.update(settings => ({ ...settings, meta: { form } }));
+
+  onMount(() => {
+    switch ($page.url.searchParams.get("action")) {
+      case "create-tracker":
+        openDrawer();
+        break;
+
+      case "create-bug":
+        bugCreationMode = true;
+        break;
+
+      default:
+        break;
+    }
+  });
 </script>
 
 <section class="flex flex-col gap-5">
-  <header class="flex flex-row justify-end">
+  <header class="flex flex-row justify-between">
+    <div class="flex items-center animate-pulse">
+      {#if bugCreationMode}
+        <p>Please select a Tracker to issue a Bug for</p>
+      {/if}
+    </div>
     <button class="btn variant-soft-primary rounded-md gap-2" on:click={openDrawer}>
       <i class="fa-solid fa-plus" />
       Create Tracker
@@ -62,7 +86,10 @@
 
   <div class="flex-row gap-4 space-y-4">
     {#each data.trackers as tracker (tracker._id)}
-      <a href="/trackers/{tracker._id}" class="card cursor-pointer px-8 py-4 flex justify-between">
+      <a
+        href="/trackers/{tracker._id}{bugCreationMode ? '?action=create-bug' : ''}"
+        class="card cursor-pointer px-8 py-4 flex justify-between"
+      >
         <h4 class="h4">{tracker.name}</h4>
         <ul class="flex flex-row gap-2">
           {#each Object.values(Status) as status}

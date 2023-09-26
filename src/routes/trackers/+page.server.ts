@@ -1,5 +1,5 @@
-import { error, fail, type Actions } from '@sveltejs/kit';
-import { validateTrackerSchema } from './utils/validateTrackerSchema';
+import { type Actions, error, fail } from "@sveltejs/kit";
+import { validateTrackerSchema } from "./utils/validateTrackerSchema";
 
 export const actions: Actions = {
   createTracker: async ({ request, locals, fetch }) => {
@@ -23,8 +23,8 @@ export const actions: Actions = {
     }
 
     // Create the entry in database
-    const response = await fetch('/api/trackers', {
-      method: 'POST',
+    const response = await fetch("/api/trackers", {
+      method: "POST",
       body: formData
     });
 
@@ -36,6 +36,6 @@ export const actions: Actions = {
       return fail(400, { data, errors });
     }
 
-    return { success: 'tracker created', _id: responseData._id };
+    return { success: "tracker created", _id: responseData._id };
   }
 };

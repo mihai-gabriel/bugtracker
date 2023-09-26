@@ -225,12 +225,6 @@
     reviewer = data.bug.reviewer._id;
     reviewerInput = data.bug.reviewer.name ?? "";
     reviewerInputImage = data.bug.reviewer.image ?? "";
-
-    form = {
-      data: {},
-      errors: undefined,
-      success: undefined
-    };
   };
 
   $: formActive =
