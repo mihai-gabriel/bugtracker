@@ -1,4 +1,5 @@
 import type { BugResponse } from "./bug";
+import type { AuthorizationResponse } from "$lib/interfaces/dto/authorization";
 
 export type TrackerRequest = {
   name: string;
@@ -10,4 +11,5 @@ export type TrackerResponse = {
   name: string;
   author: string;
   bugs: BugResponse[];
+  authorization: AuthorizationResponse;
 };

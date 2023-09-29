@@ -31,7 +31,7 @@
   const openCreateForm = () => {
     const newBugModal: ModalComponent = {
       ref: NewBugForm,
-      props: { trackerId: data.tracker._id, users: data.users }
+      props: { trackerId: data.tracker._id, users: data.trackerUsers }
     };
 
     const modal: ModalSettings = {
@@ -59,7 +59,7 @@
       props: {
         bug: selectedBug,
         trackerId: data.tracker._id,
-        users: data.users,
+        users: data.trackerUsers,
         currentUrl: $page.url.pathname
       }
     };
@@ -186,6 +186,14 @@
         <i class="fa-solid fa-bug" />
         Create Bug
       </button>
+      {#if data.tracker.author === data.session?.user.id}
+        <a
+          class="btn variant-soft-tertiary rounded-md gap-2"
+          href="/trackers/{data.tracker._id}/users"
+        >
+          <i class="fa-solid fa-people-group" />Manage Team
+        </a>
+      {/if}
     </div>
   </header>
 

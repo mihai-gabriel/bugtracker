@@ -4,17 +4,39 @@ import type { Actions } from "@sveltejs/kit";
 import { error, fail } from "@sveltejs/kit";
 import { validateBugSchema } from "../../trackers/[id]/utils/validateBugSchema";
 import type { UserResponse } from "$lib/interfaces/dto";
+import type { UserWithPermissionsResponse } from "$lib/interfaces/dto/user";
 
 export const load = (async ({ params, fetch, depends }) => {
   const response = await fetch(`/api/bugs/${params.id}`);
+
+  if (response.status >= 400 && response.status <= 500) {
+    throw error(403, { message: "Forbidden" });
+  }
+
   const bug: BugResponseFullWithTracker = await response.json();
 
   depends("bug");
 
-  const usersResponse = await fetch("/api/users");
-  const users: UserResponse[] = await usersResponse.json();
+  const trackerUsersResponse = await fetch(`/api/users?tracker=${bug.tracker._id}`);
+  const trackerUsers: UserResponse[] = await trackerUsersResponse.json();
 
-  return { bug, users };
+  // Concatenate the users info with their permissions for the current tracker.
+  const usersWithPermissions: UserWithPermissionsResponse[] = await Promise.all(
+    trackerUsers.map(async user => {
+      const url = `/api/authorizations?user=${user._id}&tracker=${bug.tracker._id}`;
+      const authorizationResponse = await fetch(url);
+      const { permissions } = await authorizationResponse.json();
+
+      const userWithPermissions: UserWithPermissionsResponse = {
+        ...user,
+        permissions
+      };
+
+      return userWithPermissions;
+    })
+  );
+
+  return { bug, users: usersWithPermissions };
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {

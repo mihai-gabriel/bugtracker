@@ -21,8 +21,27 @@ export const GET: RequestHandler = async ({ locals }) => {
   const bugsAssignedToUser = await collection
     .aggregate([
       {
+        $lookup: {
+          from: "trackers",
+          localField: "_id",
+          foreignField: "bugs",
+          as: "tracker"
+        }
+      },
+      { $unwind: "$tracker" },
+      { $project: { tracker: { bugs: false, author: false } } },
+      {
+        $lookup: {
+          from: "authorizations",
+          localField: "tracker._id",
+          foreignField: "tracker",
+          as: "authorization"
+        }
+      },
+      {
         $match: {
-          $or: [{ assignee: new ObjectId(userId) }, { reviewer: new ObjectId(userId) }]
+          $or: [{ assignee: new ObjectId(userId) }, { reviewer: new ObjectId(userId) }],
+          "authorization.user": new ObjectId(userId)
         }
       },
       {
@@ -42,17 +61,7 @@ export const GET: RequestHandler = async ({ locals }) => {
         }
       },
       { $unwind: "$reviewer" },
-      { $unwind: "$assignee" },
-      {
-        $lookup: {
-          from: "trackers",
-          localField: "_id",
-          foreignField: "bugs",
-          as: "tracker"
-        }
-      },
-      { $unwind: "$tracker" },
-      { $project: { tracker: { bugs: false, author: false } } }
+      { $unwind: "$assignee" }
     ])
     .toArray();
 

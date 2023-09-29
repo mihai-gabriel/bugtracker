@@ -4,7 +4,7 @@ import type { TrackerResponse } from "$lib/interfaces/dto/tracker";
 
 // TODO: Provide explanations / description for each field
 
-// asignee and reviewer should be ObjectId-Like strings
+// assignee and reviewer should be ObjectId-Like strings
 export type BugRequest = {
   id: string;
   title: string;
@@ -15,7 +15,7 @@ export type BugRequest = {
   status: Status;
 };
 
-// asignee and reviewer should be one of these: usernames/email/name.
+// assignee and reviewer should be one of these: usernames/email/name.
 // I'll decide that later
 export type BugResponse = {
   _id: string;

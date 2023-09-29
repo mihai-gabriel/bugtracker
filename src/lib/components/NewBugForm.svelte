@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { enhance } from '$app/forms';
-  import type { TrackerResponse, UserResponse } from '$lib/interfaces/dto';
-  import { Priority, Status } from '$lib/interfaces/shared';
+  import { enhance } from "$app/forms";
+  import type { TrackerResponse, UserResponse } from "$lib/interfaces/dto";
+  import { Priority, Status } from "$lib/interfaces/shared";
   import {
     Autocomplete,
     type AutocompleteOption,
@@ -12,19 +12,19 @@
     type PopupSettings,
     RadioGroup,
     RadioItem
-  } from '@skeletonlabs/skeleton';
-  import { formatPriorityText, formatStatusText } from '$lib/utils/formatText';
+  } from "@skeletonlabs/skeleton";
+  import { formatPriorityText, formatStatusText } from "$lib/utils/formatText";
 
   export let parent: Record<CssClasses, CssClasses>;
-  export let trackerId: TrackerResponse['_id']; // the tracker we create the bug for
+  export let trackerId: TrackerResponse["_id"]; // the tracker we create the bug for
   export let users: UserResponse[];
 
   const modalStore = getModalStore();
 
   const usersSelectOptions: AutocompleteOption[] = users.map(user => ({
-    label: user.name ?? '',
-    value: user._id ?? '',
-    meta: { avatar: user.image ?? '' }
+    label: user.name ?? "",
+    value: user._id ?? "",
+    meta: { avatar: user.image ?? "" }
   }));
 
   /* Asignee Configuration */
@@ -33,9 +33,9 @@
   let assigneeInputImage: string;
 
   let asigneePopup: PopupSettings = {
-    event: 'focus-click',
-    target: 'asignee-popup',
-    placement: 'bottom'
+    event: "focus-click",
+    target: "asignee-popup",
+    placement: "bottom"
   };
 
   const onAssigneeSelection = (event: CustomEvent<AutocompleteOption>): void => {
@@ -50,9 +50,9 @@
   let reviewerInputImage: string;
 
   let reviewerPopup: PopupSettings = {
-    event: 'focus-click',
-    target: 'reviewer-popup',
-    placement: 'bottom'
+    event: "focus-click",
+    target: "reviewer-popup",
+    placement: "bottom"
   };
 
   const onReviewerSelection = (event: CustomEvent<AutocompleteOption>): void => {
@@ -67,15 +67,15 @@
   const priorityColor = (priority: Priority) => {
     switch (priority) {
       case Priority.MINIMAL:
-        return 'variant-filled-surface';
+        return "variant-filled-surface";
       case Priority.LOW:
-        return 'variant-filled-tertiary';
+        return "variant-filled-tertiary";
       case Priority.MODERATE:
-        return 'variant-filled-secondary';
+        return "variant-filled-secondary";
       case Priority.HIGH:
-        return 'variant-filled-warning';
+        return "variant-filled-warning";
       case Priority.CRITICAL:
-        return 'variant-filled-error';
+        return "variant-filled-error";
     }
   };
 
@@ -102,7 +102,7 @@
             id="title"
             name="title"
             class="input rounded-md"
-            value={$modalStore[0].meta.form?.data?.title ?? ''}
+            value={$modalStore[0].meta.form?.data?.title ?? ""}
           />
           {#if $modalStore[0].meta.form?.errors?.title}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.title}</p>
@@ -111,7 +111,7 @@
         <fieldset class="space-y-2">
           <label for="description">Description:</label>
           <textarea id="description" name="description" class="textarea rounded-md"
-            >{$modalStore[0].meta.form?.data?.description ?? ''}</textarea
+            >{$modalStore[0].meta.form?.data?.description ?? ""}</textarea
           >
           {#if $modalStore[0].meta.form?.errors?.description}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.description}</p>
@@ -122,6 +122,17 @@
 
         <fieldset class="space-y-2 relative">
           <label for="assignee">Assignee:</label>
+          <div
+            class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md z-10"
+            tabindex="-1"
+            data-popup="asignee-popup"
+          >
+            <Autocomplete
+              bind:input={assigneeInput}
+              options={usersSelectOptions}
+              on:selection={onAssigneeSelection}
+            />
+          </div>
           <div
             class="input-group input-group-divider grid-cols-[auto_1fr]"
             use:popup={asigneePopup}
@@ -142,17 +153,7 @@
               autocomplete="off"
             />
           </div>
-          <div
-            class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md z-10"
-            tabindex="-1"
-            data-popup="asignee-popup"
-          >
-            <Autocomplete
-              bind:input={assigneeInput}
-              options={usersSelectOptions}
-              on:selection={onAssigneeSelection}
-            />
-          </div>
+
           <input type="hidden" name="assignee" bind:value={assignee} />
           {#if $modalStore[0].meta.form?.errors?.assignee}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.assignee}</p>
@@ -161,6 +162,17 @@
 
         <fieldset class="space-y-2 relative">
           <label for="reviewer">Reviewer:</label>
+          <div
+            class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md"
+            tabindex="-1"
+            data-popup="reviewer-popup"
+          >
+            <Autocomplete
+              bind:input={reviewerInput}
+              options={usersSelectOptions}
+              on:selection={onReviewerSelection}
+            />
+          </div>
           <div
             class="input-group input-group-divider grid-cols-[auto_1fr]"
             use:popup={reviewerPopup}
@@ -181,17 +193,7 @@
               autocomplete="off"
             />
           </div>
-          <div
-            class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md"
-            tabindex="-1"
-            data-popup="reviewer-popup"
-          >
-            <Autocomplete
-              bind:input={reviewerInput}
-              options={usersSelectOptions}
-              on:selection={onReviewerSelection}
-            />
-          </div>
+
           <input type="hidden" name="reviewer" bind:value={reviewer} />
           {#if $modalStore[0].meta.form?.errors?.reviewer}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.reviewer}</p>

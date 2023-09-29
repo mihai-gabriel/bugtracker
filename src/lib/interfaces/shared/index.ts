@@ -1,15 +1,15 @@
 export enum Priority {
-  MINIMAL = 'MINIMAL',
-  LOW = 'LOW',
-  MODERATE = 'MODERATE',
-  HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  MINIMAL = "MINIMAL",
+  LOW = "LOW",
+  MODERATE = "MODERATE",
+  HIGH = "HIGH",
+  CRITICAL = "CRITICAL"
 }
 
 export enum Status {
-  NOT_STARTED = 'NOT_STARTED',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED'
+  NOT_STARTED = "NOT_STARTED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED"
 }
 
 export type Breadcrumb = {
@@ -17,7 +17,6 @@ export type Breadcrumb = {
   path: string;
 };
 
-// DRAFT:
 /**
  * READ: Can see the tracker / bugs
  * EDIT: Can edit bugs
@@ -25,4 +24,9 @@ export type Breadcrumb = {
  *
  * Note: Only the author of the tracker can edit / delete it.
  */
-export type Permission = 'READ' | 'EDIT' | 'DELETE';
+export type Permission = "READ" | "EDIT" | "DELETE";
+
+/**
+ * Used to decide whether we remove or grant a permission
+ */
+export type PermissionAction = "GRANT" | "REMOVE";

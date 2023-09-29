@@ -3,6 +3,7 @@ import { error, json } from "@sveltejs/kit";
 import db from "$lib/server/db";
 import type { Bug } from "$lib/interfaces/db";
 import { ObjectId } from "mongodb";
+import type { Authorization } from "$lib/interfaces/db/authorization";
 
 export const GET: RequestHandler = async ({ locals, params }) => {
   const session = await locals.getSession();
@@ -14,8 +15,8 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 
   const bugId = params["id"];
 
-  if (!bugId) {
-    throw error(400, "Bad Request: Invalid Bug ID");
+  if (!bugId || !ObjectId.isValid(bugId)) {
+    throw error(400, { message: "Bad Request: Invalid Bug ID" });
   }
 
   const bugCollection = db.collection<Bug>("bugs");
@@ -52,6 +53,20 @@ export const GET: RequestHandler = async ({ locals, params }) => {
       { $project: { tracker: { bugs: false, author: false } } }
     ])
     .next();
+
+  if (!bug) {
+    throw error(404, { message: "Not found" });
+  }
+
+  const authorizations = db.collection<Authorization>("authorizations");
+  const authorized = await authorizations.findOne({
+    user: new ObjectId(userId),
+    tracker: new ObjectId(bug.tracker._id)
+  });
+
+  if (!authorized) {
+    throw error(403, { message: "User not authorized to view specified Tracker" });
+  }
 
   return json(bug);
 };

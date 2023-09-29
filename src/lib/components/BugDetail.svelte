@@ -34,9 +34,9 @@
   let assigneeInput: string = bug.assignee.name ?? "";
   let assigneeInputImage: string = bug.assignee.image ?? "";
 
-  let asigneePopup: PopupSettings = {
+  let assigneePopup: PopupSettings = {
     event: "focus-click",
-    target: "asignee-popup",
+    target: "assignee-popup",
     placement: "bottom"
   };
 
@@ -129,8 +129,19 @@
         <fieldset class="space-y-2 relative">
           <label for="assignee">Assignee:</label>
           <div
+            class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md z-10"
+            tabindex="-1"
+            data-popup="assignee-popup"
+          >
+            <Autocomplete
+              bind:input={assigneeInput}
+              options={usersSelectOptions}
+              on:selection={onAssigneeSelection}
+            />
+          </div>
+          <div
             class="input-group input-group-divider grid-cols-[auto_1fr]"
-            use:popup={asigneePopup}
+            use:popup={assigneePopup}
           >
             <div class="input-group-shim">
               {#if assigneeInputImage}
@@ -148,17 +159,7 @@
               autocomplete="off"
             />
           </div>
-          <div
-            class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md z-10"
-            tabindex="-1"
-            data-popup="asignee-popup"
-          >
-            <Autocomplete
-              bind:input={assigneeInput}
-              options={usersSelectOptions}
-              on:selection={onAssigneeSelection}
-            />
-          </div>
+
           <input type="hidden" name="assignee" bind:value={assignee} />
           {#if $modalStore[0].meta.form?.errors?.assignee}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.assignee}</p>
