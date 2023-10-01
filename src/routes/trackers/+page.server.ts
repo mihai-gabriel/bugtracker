@@ -1,28 +1,17 @@
-import { type Actions, error, fail } from "@sveltejs/kit";
+import { type Actions, fail } from "@sveltejs/kit";
 import { validateTrackerSchema } from "./utils/validateTrackerSchema";
 
 export const actions: Actions = {
-  createTracker: async ({ request, locals, fetch }) => {
-    // Check the validity of the user
-    const session = await locals.getSession();
-    const userInfo = session?.user;
-
-    // TODO: Implement role-based authorization
-    if (!userInfo) {
-      throw error(403, { message: "You don't have access to this resource." });
-    }
-
+  createTracker: async ({ request, fetch }) => {
     const formData = await request.formData();
     const data = Object.fromEntries(formData);
 
-    // Validate form values according to a schema
     const { errors } = validateTrackerSchema(formData);
 
     if (errors) {
       return fail(400, { data, errors });
     }
 
-    // Create the entry in database
     const response = await fetch("/api/trackers", {
       method: "POST",
       body: formData

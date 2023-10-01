@@ -1,26 +1,34 @@
 <script lang="ts">
-  import BugField from '$lib/components/BugField.svelte';
-  import type { BugResponseFull } from '$lib/interfaces/dto';
-  import { receive, send } from '../utils/transition';
-  import { flip } from 'svelte/animate';
-  import { createEventDispatcher } from 'svelte';
+  import BugField from "$lib/components/BugField.svelte";
+  import type { BugResponseFull } from "$lib/interfaces/dto";
+  import { receive, send } from "../utils/transition";
+  import { flip } from "svelte/animate";
+  import { createEventDispatcher } from "svelte";
+  import type { Permission } from "$lib/interfaces/shared";
+  import { goto } from "$app/navigation";
 
   export let bugs: BugResponseFull[];
   export let hoveringOver: boolean;
+  export let userPermissions: Permission[];
 
   const dispatch = createEventDispatcher();
-  const selectBug = (id: string) => {
-    dispatch('selectBug', { id });
+  const selectBug = async (id: string) => {
+    if (!userPermissions.includes("EDIT")) {
+      await goto(`/bugs/${id}`);
+      return;
+    }
+
+    dispatch("selectBug", { id });
   };
 
   const dragStart = (event: DragEvent, id: string) => {
-    dispatch('dragStart', {
+    dispatch("dragStart", {
       bugId: id,
       dragEvent: event
     });
   };
 
-  $: backgroundStyle = hoveringOver ? 'bg-secondary-400/20' : 'bg-secondary-100/10';
+  $: backgroundStyle = hoveringOver ? "bg-secondary-400/20" : "bg-secondary-100/10";
 </script>
 
 <ul
@@ -37,7 +45,7 @@
   {#each bugs as bug (bug._id)}
     <li
       class:pointer-events-none={hoveringOver}
-      draggable={true}
+      draggable={userPermissions.includes("EDIT")}
       in:receive={{ key: bug._id }}
       out:send={{ key: bug._id }}
       animate:flip={{ duration: 100 }}

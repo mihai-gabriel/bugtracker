@@ -18,16 +18,26 @@
   import SvelteMarkdown from "svelte-markdown";
   import { onMount } from "svelte";
   import type { SubmitFunction } from "@sveltejs/kit";
+  import {
+    boldModifier,
+    codeModifier,
+    heading1Modifier,
+    heading2Modifier,
+    heading3Modifier,
+    heading4Modifier,
+    heading5Modifier,
+    heading6Modifier,
+    italicModifier
+  } from "$lib/utils/markdown";
+  import type { DOMPurifyI } from "dompurify";
 
   export let data: PageData;
   export let form: ActionData;
 
-  // Avoiding TS errors / mental gymnastics
-  let DOMPurify: { sanitize: (text: string, options: object) => string } | undefined = undefined;
+  let DOMPurify: DOMPurifyI | undefined = undefined;
 
   onMount(async () => {
-    const module = await import("dompurify");
-    DOMPurify = module.default;
+    DOMPurify = (await import("dompurify")).default;
   });
 
   const modalStore = getModalStore();
@@ -137,16 +147,6 @@
   /* Description handlers */
   let descriptionElement: HTMLTextAreaElement;
   let descriptionInput = data.bug.description;
-
-  const boldModifier = (text: string) => `**${text}**`;
-  const italicModifier = (text: string) => `*${text}*`;
-  const heading1Modifier = (text: string) => `# ${text}`;
-  const heading2Modifier = (text: string) => `## ${text}`;
-  const heading3Modifier = (text: string) => `### ${text}`;
-  const heading4Modifier = (text: string) => `#### ${text}`;
-  const heading5Modifier = (text: string) => `##### ${text}`;
-  const heading6Modifier = (text: string) => `###### ${text}`;
-  const codeModifier = (text: string) => `\`${text}\``;
 
   const replaceSelection = (modifier: (selection: string) => string): void => {
     const selectedText = descriptionElement.value.substring(
@@ -285,13 +285,15 @@
             {data.bug.title}
           </h3>
           <input type="hidden" value={data.bug.title} name="title" />
-          <button
-            class="opacity-0 group-hover:opacity-100 text-slate-300"
-            aria-hidden="true"
-            on:click={() => (editingTitle = true)}
-          >
-            <i class="fa-solid fa-pen-to-square" />
-          </button>
+          {#if data.currentUserPermissions.includes("EDIT")}
+            <button
+              class="opacity-0 group-hover:opacity-100 text-slate-300"
+              aria-hidden="true"
+              on:click={() => (editingTitle = true)}
+            >
+              <i class="fa-solid fa-pen-to-square" />
+            </button>
+          {/if}
         {/if}
       </div>
       <a class="hover:underline text-slate-300" href="/trackers/{data.bug.tracker._id}">
@@ -310,39 +312,43 @@
         <span><i class="fa-solid {linkIcon}" /></span>
         <span>{linkText}</span>
       </span>
-      {#if data.bug.status !== Status.COMPLETED}
+      {#if data.currentUserPermissions.includes("EDIT")}
+        {#if data.bug.status !== Status.COMPLETED}
+          <!-- svelte-ignore a11y-click-events-have-key-events -->
+          <span
+            class="chip variant-soft-primary hover:variant-filled"
+            on:click={() => updateBugStatus(Status.COMPLETED)}
+            role="button"
+            tabindex="0"
+          >
+            <span><i class="fa-regular fa-circle-check" /></span>
+            <span>Mark as Completed</span>
+          </span>
+        {/if}
         <!-- svelte-ignore a11y-click-events-have-key-events -->
         <span
-          class="chip variant-soft-primary hover:variant-filled"
-          on:click={() => updateBugStatus(Status.COMPLETED)}
+          class="chip variant-soft-secondary hover:variant-filled"
+          on:click={activateForm}
           role="button"
           tabindex="0"
         >
-          <span><i class="fa-regular fa-circle-check" /></span>
-          <span>Mark as Completed</span>
+          <span><i class="fa-solid fa-pen-nib" /></span>
+          <span>Edit Mode</span>
         </span>
       {/if}
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <span
-        class="chip variant-soft-secondary hover:variant-filled"
-        on:click={activateForm}
-        role="button"
-        tabindex="0"
-      >
-        <span><i class="fa-solid fa-pen-nib" /></span>
-        <span>Edit Mode</span>
-      </span>
-      <!-- svelte-ignore a11y-click-events-have-key-events -->
-      <!-- TODO: Perhaps use a form action here?  -->
-      <span
-        class="chip variant-soft-error hover:variant-filled"
-        on:click={confirmDeleteDialog}
-        role="button"
-        tabindex="0"
-      >
-        <span><i class="fa-solid fa-trash" /></span>
-        <span>Delete</span>
-      </span>
+      {#if data.currentUserPermissions.includes("DELETE")}
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <!-- TODO: Perhaps use a form action here?  -->
+        <span
+          class="chip variant-soft-error hover:variant-filled"
+          on:click={confirmDeleteDialog}
+          role="button"
+          tabindex="0"
+        >
+          <span><i class="fa-solid fa-trash" /></span>
+          <span>Delete</span>
+        </span>
+      {/if}
     </div>
   </header>
 
@@ -354,13 +360,15 @@
       >
         <header class="flex flex-row gap-4">
           <h6 class="h6 text-slate-400 select-none">Description</h6>
-          <button
-            class="opacity-0 group-hover:opacity-100 text-slate-300"
-            aria-hidden="true"
-            on:click|preventDefault={() => (editingDescription = true)}
-          >
-            <i class="fa-solid fa-pen-to-square" />
-          </button>
+          {#if data.currentUserPermissions.includes("EDIT")}
+            <button
+              class="opacity-0 group-hover:opacity-100 text-slate-300"
+              aria-hidden="true"
+              on:click|preventDefault={() => (editingDescription = true)}
+            >
+              <i class="fa-solid fa-pen-to-square" />
+            </button>
+          {/if}
         </header>
         {#if editingDescription}
           <div>
@@ -457,11 +465,15 @@
             name="description"
           />
           <p class="text-slate-400">
-            Use <a
+            Use
+            <a
               class="text-blue-500"
               href="https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax"
-              target="_blank">Markdown</a
-            > to format the text
+              target="_blank"
+            >
+              Markdown
+            </a>
+            to format the text
           </p>
         {:else}
           {#key data.bug.description}
@@ -484,13 +496,15 @@
       <article class="flex flex-col gap-1 group hover:variant-glass-surface rounded-md px-4 py-2">
         <header class="flex flex-row gap-4">
           <h6 class="h6 text-slate-400 select-none">Assignee</h6>
-          <button
-            class="opacity-0 group-hover:opacity-100 text-slate-300"
-            aria-hidden="true"
-            on:click|preventDefault={() => (editingAssignee = true)}
-          >
-            <i class="fa-solid fa-pen-to-square" />
-          </button>
+          {#if data.currentUserPermissions.includes("EDIT")}
+            <button
+              class="opacity-0 group-hover:opacity-100 text-slate-300"
+              aria-hidden="true"
+              on:click|preventDefault={() => (editingAssignee = true)}
+            >
+              <i class="fa-solid fa-pen-to-square" />
+            </button>
+          {/if}
         </header>
         {#if editingAssignee}
           <div
@@ -532,13 +546,15 @@
       <article class="flex flex-col gap-1 group hover:variant-glass-surface rounded-md px-4 py-2">
         <header class="flex flex-row gap-4">
           <h6 class="h6 text-slate-400 select-none">Reviewer</h6>
-          <button
-            class="opacity-0 group-hover:opacity-100 text-slate-300"
-            aria-hidden="true"
-            on:click|preventDefault={() => (editingReviewer = true)}
-          >
-            <i class="fa-solid fa-pen-to-square" />
-          </button>
+          {#if data.currentUserPermissions.includes("EDIT")}
+            <button
+              class="opacity-0 group-hover:opacity-100 text-slate-300"
+              aria-hidden="true"
+              on:click|preventDefault={() => (editingReviewer = true)}
+            >
+              <i class="fa-solid fa-pen-to-square" />
+            </button>
+          {/if}
         </header>
         {#if editingReviewer}
           <div
@@ -595,13 +611,15 @@
       <article class="flex flex-col gap-1 group hover:variant-glass-surface rounded-md px-4 py-2">
         <header class="flex flex-row gap-4">
           <h6 class="h6 text-slate-400 select-none">Status</h6>
-          <button
-            class="opacity-0 group-hover:opacity-100 text-slate-300"
-            aria-hidden="true"
-            on:click|preventDefault={() => (editingStatus = true)}
-          >
-            <i class="fa-solid fa-pen-to-square" />
-          </button>
+          {#if data.currentUserPermissions.includes("EDIT")}
+            <button
+              class="opacity-0 group-hover:opacity-100 text-slate-300"
+              aria-hidden="true"
+              on:click|preventDefault={() => (editingStatus = true)}
+            >
+              <i class="fa-solid fa-pen-to-square" />
+            </button>
+          {/if}
         </header>
         <div>
           {#if editingStatus}
@@ -626,13 +644,15 @@
       <article class="flex flex-col gap-1 group hover:variant-glass-surface rounded-md px-4 py-2">
         <header class="flex flex-row gap-4">
           <h6 class="h6 text-slate-400 select-none">Priority</h6>
-          <button
-            class="opacity-0 group-hover:opacity-100 text-slate-300"
-            aria-hidden="true"
-            on:click|preventDefault={() => (editingPriority = true)}
-          >
-            <i class="fa-solid fa-pen-to-square" />
-          </button>
+          {#if data.currentUserPermissions.includes("EDIT")}
+            <button
+              class="opacity-0 group-hover:opacity-100 text-slate-300"
+              aria-hidden="true"
+              on:click|preventDefault={() => (editingPriority = true)}
+            >
+              <i class="fa-solid fa-pen-to-square" />
+            </button>
+          {/if}
         </header>
         <div>
           {#if editingPriority}

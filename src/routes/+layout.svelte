@@ -113,7 +113,7 @@
       </a>
       <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div
-        class="absolute px-2 right-0 h-[90vh] group hover:cursor-col-resize"
+        class="absolute px-2 right-0 h-[80vh] group hover:cursor-col-resize"
         on:click={() => (menuActive = false)}
         role="button"
         tabindex="0"

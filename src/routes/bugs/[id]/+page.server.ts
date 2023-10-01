@@ -4,9 +4,9 @@ import type { Actions } from "@sveltejs/kit";
 import { error, fail } from "@sveltejs/kit";
 import { validateBugSchema } from "../../trackers/[id]/utils/validateBugSchema";
 import type { UserResponse } from "$lib/interfaces/dto";
-import type { UserWithPermissionsResponse } from "$lib/interfaces/dto/user";
 
-export const load = (async ({ params, fetch, depends }) => {
+export const load = (async ({ params, fetch, depends, parent }) => {
+  const { session } = await parent();
   const response = await fetch(`/api/bugs/${params.id}`);
 
   if (response.status >= 400 && response.status <= 500) {
@@ -15,52 +15,34 @@ export const load = (async ({ params, fetch, depends }) => {
 
   const bug: BugResponseFullWithTracker = await response.json();
 
-  depends("bug");
-
   const trackerUsersResponse = await fetch(`/api/users?tracker=${bug.tracker._id}`);
   const trackerUsers: UserResponse[] = await trackerUsersResponse.json();
 
-  // Concatenate the users info with their permissions for the current tracker.
-  const usersWithPermissions: UserWithPermissionsResponse[] = await Promise.all(
-    trackerUsers.map(async user => {
-      const url = `/api/authorizations?user=${user._id}&tracker=${bug.tracker._id}`;
-      const authorizationResponse = await fetch(url);
-      const { permissions } = await authorizationResponse.json();
+  const authorizationUrl = `/api/authorizations?user=${session?.user.id}&tracker=${bug.tracker._id}`;
+  const authorizationResponse = await fetch(authorizationUrl);
 
-      const userWithPermissions: UserWithPermissionsResponse = {
-        ...user,
-        permissions
-      };
+  if (authorizationResponse.status >= 400 && authorizationResponse.status <= 500) {
+    throw error(400, { message: "Bad Request: Malformed tracker / user data." });
+  }
 
-      return userWithPermissions;
-    })
-  );
+  const { permissions } = await authorizationResponse.json();
 
-  return { bug, users: usersWithPermissions };
+  depends("bug");
+
+  return { bug, users: trackerUsers, currentUserPermissions: permissions };
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
-  default: async ({ request, locals, fetch }) => {
-    // Check the validity of the user
-    const session = await locals.getSession();
-    const userInfo = session?.user;
-
-    // TODO: Implement role-based authorization
-    if (!userInfo) {
-      throw error(403, { message: "Authorization Error: You don't have access to this resource." });
-    }
-
+  default: async ({ request, fetch }) => {
     const formData = await request.formData();
     const data = Object.fromEntries(formData);
 
-    // Validate form values according to a schema
     const { errors } = validateBugSchema(formData);
 
     if (errors) {
       return fail(400, { data, errors });
     }
 
-    // Create the entry in database
     const response = await fetch("/api/bugs", {
       method: "PUT",
       body: formData

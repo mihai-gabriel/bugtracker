@@ -19,6 +19,12 @@
 
   $: bugCreationMode = $page.url.searchParams.get("action") === "create-bug";
 
+  let searchInput = "";
+
+  $: trackers = data.trackers.filter(tracker =>
+    tracker.name.toLowerCase().includes(searchInput.toLowerCase())
+  );
+
   const openDrawer = () => {
     const drawerSettings: DrawerSettings = {
       id: "create-tracker",
@@ -76,7 +82,7 @@
   <header class="flex flex-row justify-between">
     <div class="flex items-center gap-4 animate-pulse">
       {#if bugCreationMode}
-        {#if data.trackers.length === 0}
+        {#if trackers.length === 0}
           <p>Create or join a Tracker and then select it to issue a Bug for it.</p>
         {:else}
           <p>Please select a Tracker to issue a Bug for.</p>
@@ -87,14 +93,22 @@
         </button>
       {/if}
     </div>
-    <button class="btn variant-soft-primary rounded-md gap-2" on:click={openDrawer}>
-      <i class="fa-solid fa-plus" />
-      Create Tracker
-    </button>
+    <div class="flex flex-row gap-4">
+      <input
+        type="text"
+        class="input rounded-md variant-ghost"
+        placeholder="Search..."
+        bind:value={searchInput}
+      />
+      <button class="btn variant-soft-primary rounded-md gap-2" on:click={openDrawer}>
+        <i class="fa-solid fa-plus" />
+        Create Tracker
+      </button>
+    </div>
   </header>
 
   <div class="flex-row gap-4 space-y-4">
-    {#each data.trackers as tracker (tracker._id)}
+    {#each trackers as tracker (tracker._id)}
       <div class="card px-8 py-4 flex justify-between items-center">
         <a
           href="/trackers/{tracker._id}{bugCreationMode ? '?action=create-bug' : ''}"

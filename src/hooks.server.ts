@@ -36,7 +36,7 @@ export const oauthEntryPoint: Handle = SvelteKitAuth({
   ],
   callbacks: {
     session: async ({ session }) => {
-      if (session?.user?.email) {
+      if (session.user?.email) {
         const users = db.collection<User>("users");
         const existingUser = await users.findOne({ email: session.user.email });
 

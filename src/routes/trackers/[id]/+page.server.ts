@@ -2,10 +2,9 @@ import { error, fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { validateBugSchema } from "./utils/validateBugSchema";
 import type { BugResponseFull, UserResponse } from "$lib/interfaces/dto";
-import type { UserWithPermissionsResponse } from "$lib/interfaces/dto/user";
 
 export const load = (async ({ parent, params, depends, fetch }) => {
-  const { trackers } = await parent();
+  const { trackers, session } = await parent();
   const tracker = trackers.find(tracker_ => tracker_._id === params.id);
 
   if (!tracker) {
@@ -18,22 +17,6 @@ export const load = (async ({ parent, params, depends, fetch }) => {
   if (!trackerUsers) {
     throw error(403, { message: "Malformed Data: Tracker has no users" });
   }
-
-  // Concatenate the users info with their permissions for the current tracker.
-  const usersWithPermissions: UserWithPermissionsResponse[] = await Promise.all(
-    trackerUsers.map(async user => {
-      const url = `/api/authorizations?user=${user._id}&tracker=${tracker._id}`;
-      const authorizationResponse = await fetch(url);
-      const { permissions } = await authorizationResponse.json();
-
-      const userWithPermissions: UserWithPermissionsResponse = {
-        ...user,
-        permissions
-      };
-
-      return userWithPermissions;
-    })
-  );
 
   const bugs: BugResponseFull[] = tracker.bugs.map(bug => {
     const fullAssignee = trackerUsers.find(user => user._id === bug.assignee);
@@ -48,24 +31,22 @@ export const load = (async ({ parent, params, depends, fetch }) => {
     return { ...bug, assignee: fullAssignee, reviewer: fullReviewer };
   });
 
+  const authorizationUrl = `/api/authorizations?user=${session?.user.id}&tracker=${tracker._id}`;
+  const authorizationResponse = await fetch(authorizationUrl);
+
+  if (authorizationResponse.status >= 400 && authorizationResponse.status <= 500) {
+    throw error(400, { message: "Bad Request: Malformed tracker / user data." });
+  }
+
+  const { permissions } = await authorizationResponse.json();
+
   depends("bugs");
 
-  return { tracker, bugs, trackerUsers: usersWithPermissions };
+  return { tracker, bugs, trackerUsers, currentUserPermissions: permissions };
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
-  /* Permission Required: EDIT */
-  createBug: async ({ request, locals, fetch, params }) => {
-    // Check the validity of the user
-    const session = await locals.getSession();
-    const userInfo = session?.user;
-
-    // TODO: Implement role-based authorization
-    if (!userInfo) {
-      throw error(403, { message: "Authorization Error: You don't have access to this resource." });
-    }
-
-    // Check if trackerId is non-null
+  createBug: async ({ request, fetch, params }) => {
     const trackerId = params["id"];
 
     if (!trackerId) {
@@ -75,17 +56,14 @@ export const actions: Actions = {
     const formData = await request.formData();
     const data = Object.fromEntries(formData);
 
-    // Validate form values according to a schema
     const { errors } = validateBugSchema(formData);
 
     if (errors) {
       return fail(400, { data, errors });
     }
 
-    // Attach trackerId to formData
     formData.append("trackerId", trackerId);
 
-    // Create the entry in database
     const response = await fetch("/api/bugs", {
       method: "POST",
       body: formData
@@ -101,18 +79,7 @@ export const actions: Actions = {
 
     return { success: "bug created" };
   },
-  /* Permission Required: EDIT */
-  updateBug: async ({ request, locals, fetch, params }) => {
-    // Check the validity of the user
-    const session = await locals.getSession();
-    const userInfo = session?.user;
-
-    // TODO: Implement role-based authorization
-    if (!userInfo) {
-      throw error(403, { message: "Authorization Error: You don't have access to this resource." });
-    }
-
-    // Check if trackerId is non-null
+  updateBug: async ({ request, fetch, params }) => {
     const trackerId = params["id"];
 
     if (!trackerId) {
@@ -122,17 +89,14 @@ export const actions: Actions = {
     const formData = await request.formData();
     const data = Object.fromEntries(formData);
 
-    // Validate form values according to a schema
     const { errors } = validateBugSchema(formData);
 
     if (errors) {
       return fail(400, { data, errors });
     }
 
-    // Attach trackerId to formData
     formData.append("trackerId", trackerId);
 
-    // Create the entry in database
     const response = await fetch("/api/bugs", {
       method: "PUT",
       body: formData
@@ -148,18 +112,7 @@ export const actions: Actions = {
 
     return { success: "bug updated" };
   },
-  /* Permission Required: DELETE */
-  deleteBug: async ({ request, locals, fetch, params }) => {
-    // Check the validity of the user
-    const session = await locals.getSession();
-    const userInfo = session?.user;
-
-    // TODO: Implement role-based authorization
-    if (!userInfo) {
-      throw error(403, { message: "Authorization Error: You don't have access to this resource." });
-    }
-
-    // Check if trackerId is non-null
+  deleteBug: async ({ request, fetch, params }) => {
     const trackerId = params["id"];
 
     if (!trackerId) {
@@ -167,11 +120,8 @@ export const actions: Actions = {
     }
 
     const formData = await request.formData();
-
-    // Attach trackerId to formData
     formData.append("trackerId", trackerId);
 
-    // Create the entry in database
     const response = await fetch("/api/bugs", {
       method: "DELETE",
       body: formData

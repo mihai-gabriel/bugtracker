@@ -38,7 +38,6 @@ export const load = (async ({ parent, params, fetch }) => {
 
 export const actions: Actions = {
   updatePermissions: async ({ request, locals, params, fetch }) => {
-    // Check the validity of the user
     const session = await locals.getSession();
     const currentUserInfo = session?.user;
 
@@ -50,20 +49,6 @@ export const actions: Actions = {
 
     if (!trackerId) {
       throw error(403, { message: "URL Error: Invalid tracker ID" });
-    }
-
-    const isAuthorFormData = loadFormDataFromObject({
-      tracker: trackerId,
-      author: currentUserInfo.id
-    });
-    const checkAuthorResponse = await fetch("/api/user/author", {
-      method: "POST",
-      body: isAuthorFormData
-    });
-    const checkAuthorData = await checkAuthorResponse.json();
-
-    if (!checkAuthorData.isUserTheAuthor) {
-      throw error(403, { message: "Forbidden: Only the author of the tracker can modify it." });
     }
 
     // Update the permission for the specified user.

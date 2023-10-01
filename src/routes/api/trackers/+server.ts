@@ -15,32 +15,21 @@ export const GET: RequestHandler = async ({ locals }) => {
     throw error(403, { message: "You don't have access to this resource." });
   }
 
-  const collection = db.collection<Tracker>("trackers");
-
   // If you're the author or have permission, you're able to fetch the trackers
-  const trackers = await collection
+  const authorizations = db.collection<Authorization>("authorizations");
+  const currentUserTrackers = await authorizations
     .aggregate([
+      { $match: { user: new ObjectId(userId), permissions: { $in: ["READ"] } } },
       {
         $lookup: {
-          from: "authorizations",
-          localField: "_id",
-          foreignField: "tracker",
-          as: "authorization"
+          from: "trackers",
+          localField: "tracker",
+          foreignField: "_id",
+          as: "tracker"
         }
       },
-      { $unwind: "$authorization" },
-      {
-        $match: {
-          $or: [
-            {
-              "authorization.user": new ObjectId(userId),
-              "authorization.permissions": { $in: ["READ"] }
-            },
-            { author: new ObjectId(userId) }
-          ]
-        }
-      },
-      { $limit: 1 },
+      { $unwind: "$tracker" },
+      { $replaceRoot: { newRoot: "$tracker" } },
       {
         $lookup: {
           from: "bugs",
@@ -52,7 +41,7 @@ export const GET: RequestHandler = async ({ locals }) => {
     ])
     .toArray();
 
-  return json(trackers);
+  return json(currentUserTrackers);
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {

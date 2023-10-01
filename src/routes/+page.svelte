@@ -26,16 +26,16 @@
       <span class="divider-vertical h-26" />
       <a
         class="card variant-ghost hover:variant-soft flex py-10 flex-row items-center justify-center w-[300px] hover:variant-ghost"
-        href="/bugs"
+        href="/trackers?action=create-bug"
       >
-        <h4 class="h4">View Bugs</h4>
+        <h4 class="h4">Report a Bug</h4>
       </a>
     </div>
     {#if $page.data.session}
       <div class="flex flex-col gap-2">
         <h3 class="h3">Quick Actions</h3>
         <a class="anchor" href="/trackers">View Trackers</a>
-        <a class="anchor" href="/trackers?action=create-bug">Report Bug</a>
+        <a class="anchor" href="/bugs">View Assigned Bugs</a>
         <a class="anchor" href="/auth">View Profile</a>
       </div>
     {/if}

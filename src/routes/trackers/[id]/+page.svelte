@@ -150,7 +150,10 @@
   $: gridColumnsClass = getColsClassByCount(statusInput.length);
 
   onMount(() => {
-    if ($page.url.searchParams.get("action") === "create-bug") {
+    if (
+      $page.url.searchParams.get("action") === "create-bug" &&
+      data.currentUserPermissions.includes("EDIT")
+    ) {
       openCreateForm();
     }
   });
@@ -182,10 +185,12 @@
         {/each}
       </ListBox>
       <span class="divider-vertical h-5" />
-      <button class="btn variant-soft-warning rounded-md gap-2" on:click={openCreateForm}>
-        <i class="fa-solid fa-bug" />
-        Create Bug
-      </button>
+      {#if data.currentUserPermissions.includes("EDIT")}
+        <button class="btn variant-soft-warning rounded-md gap-2" on:click={openCreateForm}>
+          <i class="fa-solid fa-bug" />
+          Create Bug
+        </button>
+      {/if}
       {#if data.tracker.author === data.session?.user.id}
         <a
           class="btn variant-soft-tertiary rounded-md gap-2"
@@ -203,12 +208,13 @@
         <h5 class="h5">{formatStatusText(status)}</h5>
         <BugList
           bugs={filteredBugsByStatus(status)}
-          hoveringOver={status === columnHovered}
+          hoveringOver={status === columnHovered && data.currentUserPermissions.includes("EDIT")}
           on:selectBug={openDetails}
           on:dragStart={dragStart}
           on:drop={event => drop(event, status)}
           on:dragenter={() => (columnHovered = status)}
           on:dragleave={() => (columnHovered = null)}
+          userPermissions={data.currentUserPermissions}
         />
       </div>
     {/each}
