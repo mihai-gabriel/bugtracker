@@ -1,15 +1,16 @@
 <script lang="ts">
   import BugField from "$lib/components/BugField.svelte";
-  import type { BugResponseFull } from "$lib/interfaces/dto";
+  import type { BugResponse } from "$lib/interfaces/dto";
   import { receive, send } from "../utils/transition";
   import { flip } from "svelte/animate";
   import { createEventDispatcher } from "svelte";
   import type { Permission } from "$lib/interfaces/shared";
   import { goto } from "$app/navigation";
 
-  export let bugs: BugResponseFull[];
+  export let bugs: BugResponse[];
   export let hoveringOver: boolean;
   export let userPermissions: Permission[];
+  export let displayArchive: boolean;
 
   const dispatch = createEventDispatcher();
   const selectBug = async (id: string) => {
@@ -29,10 +30,13 @@
   };
 
   $: backgroundStyle = hoveringOver ? "bg-secondary-400/20" : "bg-secondary-100/10";
+
+  // add spacing so that archive button won't cover the last bug in the column
+  $: completedColumnPadding = displayArchive && bugs.length !== 0 ? "!pb-16" : "";
 </script>
 
 <ul
-  class="flex flex-col space-y-3 p-2 min-h-[600px] rounded-md {backgroundStyle}"
+  class="flex flex-col rounded-md space-y-3 p-3 min-h-[600px] max-h-[600px] overflow-y-auto w-full {backgroundStyle} {completedColumnPadding}"
   class:outline-dashed={hoveringOver}
   class:outline-2={hoveringOver}
   class:outline-offset-4={hoveringOver}
@@ -60,4 +64,12 @@
       />
     </li>
   {/each}
+  {#if displayArchive && bugs.length !== 0}
+    <button
+      class="absolute bottom-0 left-0 btn rounded-md w-full variant-filled-secondary gap-2"
+      disabled
+    >
+      <i class="fa-solid fa-box-archive" /> Archive Completed Bugs (Not implemented yet)
+    </button>
+  {/if}
 </ul>

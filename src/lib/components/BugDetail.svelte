@@ -1,6 +1,6 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import type { BugResponseFull, TrackerResponse, UserResponse } from "$lib/interfaces/dto";
+  import type { BugResponse, TrackerResponse, UserResponse } from "$lib/interfaces/dto";
   import { Priority, Status } from "$lib/interfaces/shared";
   import {
     Autocomplete,
@@ -14,11 +14,12 @@
     RadioItem
   } from "@skeletonlabs/skeleton";
   import { formatPriorityText, formatStatusText } from "$lib/utils/formatText";
+  import { unwrapUser } from "$lib/utils/unwrapUser";
 
   export let currentUrl: string;
   export let parent: Record<CssClasses, CssClasses>;
   export let trackerId: TrackerResponse["_id"];
-  export let bug: BugResponseFull;
+  export let bug: BugResponse;
   export let users: UserResponse[];
 
   const modalStore = getModalStore();
@@ -30,9 +31,9 @@
   }));
 
   /* Assignee Configuration */
-  let assignee: string = bug.assignee._id;
-  let assigneeInput: string = bug.assignee.name ?? "";
-  let assigneeInputImage: string = bug.assignee.image ?? "";
+  let assignee: string = unwrapUser(bug.assignee, "_id") ?? "";
+  let assigneeInput: string = unwrapUser(bug.assignee, "name") ?? "";
+  let assigneeInputImage: string = unwrapUser(bug.assignee, "image") ?? "";
 
   let assigneePopup: PopupSettings = {
     event: "focus-click",
@@ -46,10 +47,16 @@
     assigneeInputImage = String(event.detail.meta?.avatar);
   };
 
+  const unassignAsignee = () => {
+    assigneeInput = "";
+    assignee = "unassigned";
+    assigneeInputImage = "";
+  };
+
   /* Reviewer Configuration */
-  let reviewer: string = bug.reviewer._id;
-  let reviewerInput: string = bug.reviewer.name ?? "";
-  let reviewerInputImage: string = bug.reviewer.image ?? "";
+  let reviewer: string = unwrapUser(bug.reviewer, "_id") ?? "";
+  let reviewerInput: string = unwrapUser(bug.reviewer, "name") ?? "";
+  let reviewerInputImage: string = unwrapUser(bug.reviewer, "image") ?? "";
 
   let reviewerPopup: PopupSettings = {
     event: "focus-click",
@@ -61,6 +68,12 @@
     reviewerInput = event.detail.label;
     reviewer = String(event.detail.value);
     reviewerInputImage = String(event.detail.meta?.avatar);
+  };
+
+  const unassignReviewer = () => {
+    reviewerInput = "";
+    reviewer = "unassigned";
+    reviewerInputImage = "";
   };
 
   /* Priority Configuration */
@@ -97,7 +110,9 @@
       <p class="text-right"><kbd class="kbd">Esc</kbd> or click away to close modal</p>
       <header class={parent.regionHeader}>
         <a href="/bugs/{bug._id}?from={currentUrl}" on:click={modalStore.close}>
-          <h3 class="h3 hover:underline">{bug.title} <i class="fa-solid fa-link fa-xs" /></h3>
+          <h3 class="h3 hover:underline break-words">
+            {bug.title} <i class="fa-solid fa-link fa-xs" />
+          </h3>
         </a>
       </header>
 
@@ -128,6 +143,7 @@
 
         <fieldset class="space-y-2 relative">
           <label for="assignee">Assignee:</label>
+
           <div
             class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md z-10"
             tabindex="-1"
@@ -145,7 +161,12 @@
           >
             <div class="input-group-shim">
               {#if assigneeInputImage}
-                <Avatar src={assigneeInputImage} width="w-8" rounded="rounded-full" />
+                <Avatar
+                  class={!users.find(user => user._id === assignee) && "saturate-0"}
+                  src={assigneeInputImage}
+                  width="w-8"
+                  rounded="rounded-full"
+                />
               {:else}
                 <i class="fa-solid fa-user-astronaut fa-lg" />
               {/if}
@@ -159,6 +180,9 @@
               autocomplete="off"
             />
           </div>
+          {#if assignee !== "unassigned" && assignee !== ""}
+            <button class="anchor" on:click|preventDefault={unassignAsignee}>Unassign</button>
+          {/if}
 
           <input type="hidden" name="assignee" bind:value={assignee} />
           {#if $modalStore[0].meta.form?.errors?.assignee}
@@ -174,7 +198,12 @@
           >
             <div class="input-group-shim">
               {#if reviewerInputImage}
-                <Avatar src={reviewerInputImage} width="w-8" rounded="rounded-full" />
+                <Avatar
+                  class={!users.find(user => user._id === reviewer) && "saturate-0"}
+                  src={reviewerInputImage}
+                  width="w-8"
+                  rounded="rounded-full"
+                />
               {:else}
                 <i class="fa-solid fa-user-astronaut fa-lg" />
               {/if}
@@ -199,6 +228,10 @@
               on:selection={onReviewerSelection}
             />
           </div>
+          {#if reviewer !== "unassigned" && reviewer !== ""}
+            <button class="anchor" on:click|preventDefault={unassignReviewer}>Unassign</button>
+          {/if}
+
           <input type="hidden" name="reviewer" bind:value={reviewer} />
           {#if $modalStore[0].meta.form?.errors?.reviewer}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.reviewer}</p>

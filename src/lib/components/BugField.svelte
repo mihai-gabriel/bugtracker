@@ -1,11 +1,12 @@
 <script lang="ts">
   import { Priority } from "$lib/interfaces/shared";
-  import type { UserResponse } from "$lib/interfaces/dto";
   import { Avatar } from "@skeletonlabs/skeleton";
+  import type { OptionalAssignedUser } from "$lib/interfaces/dto/user";
+  import { unwrapUser } from "$lib/utils/unwrapUser";
 
   export let title: string;
-  export let assignee: UserResponse;
-  export let reviewer: UserResponse;
+  export let assignee: OptionalAssignedUser;
+  export let reviewer: OptionalAssignedUser;
   export let priority: Priority;
 </script>
 
@@ -31,7 +32,7 @@
   <div class="flex flex-row space-x-6 items-center">
     <div class="flex flex-row space-x-2 items-center">
       <Avatar
-        src={assignee.image ?? ""}
+        src={unwrapUser(assignee, "image") ?? ""}
         width="w-8"
         rounded="rounded-full"
         border="border-2 border-cyan-700"
@@ -39,7 +40,7 @@
     </div>
     <div class="flex flex-row space-x-2 items-center">
       <Avatar
-        src={reviewer.image ?? ""}
+        src={unwrapUser(reviewer, "image") ?? ""}
         width="w-8"
         rounded="rounded-full"
         border="border-2 border-purple-700"

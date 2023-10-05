@@ -78,7 +78,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     throw error(500, { message: "Internal Server Error: The bug is not part of any tracker." });
   }
 
-  const authorizations = await db.collection<Authorization>("authorizations");
+  const authorizations = db.collection<Authorization>("authorizations");
   const authorization = await authorizations.findOne({
     tracker: new ObjectId(tracker._id),
     user: new ObjectId(userId)
@@ -114,7 +114,7 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
     throw error(400, { message: "Bad Request: Invalid Tracker/Bug ID" });
   }
 
-  const authorizations = await db.collection<Authorization>("authorizations");
+  const authorizations = db.collection<Authorization>("authorizations");
   const authorization = await authorizations.findOne({
     tracker: new ObjectId(trackerId),
     user: new ObjectId(userId)

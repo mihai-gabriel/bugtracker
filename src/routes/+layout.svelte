@@ -124,7 +124,9 @@
       </div>
     </div>
   {/if}
-  <div class="container mx-auto flex-col space-y-8 px-4 py-8">
+  <div
+    class="container mx-auto flex-col space-y-8 px-4 py-4 my-4 overflow-y-auto h-[calc(100vh-100px)]"
+  >
     <ol class="breadcrumb">
       {#if !excludedRoutes.includes($page.route.id ?? "")}
         {#each breadcrumbs as breadcrumb, index (index)}

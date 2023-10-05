@@ -1,5 +1,5 @@
 import type { Priority, Status } from "$lib/interfaces/shared";
-import type { UserResponse } from "./user";
+import type { OptionalAssignedUser } from "./user";
 import type { TrackerResponse } from "$lib/interfaces/dto/tracker";
 
 // TODO: Provide explanations / description for each field
@@ -9,10 +9,11 @@ export type BugRequest = {
   id: string;
   title: string;
   description: string;
-  assignee: string;
-  reviewer: string;
+  assignee: string; // stringified BugUserRequest
+  reviewer: string; // stringified BugUserRequest
   priority: Priority;
   status: Status;
+  archived: boolean;
 };
 
 // assignee and reviewer should be one of these: usernames/email/name.
@@ -21,22 +22,13 @@ export type BugResponse = {
   _id: string;
   title: string;
   description: string;
-  assignee: string;
-  reviewer: string;
+  assignee: OptionalAssignedUser;
+  reviewer: OptionalAssignedUser;
   priority: Priority;
   status: Status;
+  archived: boolean;
 };
 
-export type BugResponseFull = {
-  _id: string;
-  title: string;
-  description: string;
-  assignee: UserResponse;
-  reviewer: UserResponse;
-  priority: Priority;
-  status: Status;
-};
-
-export type BugResponseFullWithTracker = BugResponseFull & {
+export type BugResponseWithTracker = BugResponse & {
   tracker: Partial<TrackerResponse>;
 };

@@ -22,6 +22,7 @@
   import { loadFormDataFromObject } from "$lib/utils/formDataInit";
   import { invalidate } from "$app/navigation";
   import { page } from "$app/stores";
+  import { unwrapUser } from "$lib/utils/unwrapUser";
 
   export let data: PageData;
   export let form: ActionData;
@@ -52,7 +53,7 @@
   };
 
   const openDetails = (event: ComponentEvents<BugList>["selectBug"]) => {
-    const selectedBug = data.bugs.find(bug => bug._id === event.detail.id);
+    const selectedBug = data.tracker.bugs.find(bug => bug._id === event.detail.id);
 
     const bugDetailModal: ModalComponent = {
       ref: BugDetail,
@@ -99,6 +100,9 @@
   // bug columns grouped by Status;
   let columnsByStatus: Status[];
 
+  // filter by assignee or reviewer name
+  let searchInput = "";
+
   const filterColumnsByStatusInput = (input: Status[]) => {
     if (input.length === 0) {
       return Object.values(Status);
@@ -108,8 +112,20 @@
   };
 
   $: columnsByStatus = filterColumnsByStatusInput(statusInput);
-  $: filteredBugsByStatus = (status: Status) => {
-    return data.bugs.filter(bug => bug.status === status).sort(sortPredicateBugPriority);
+  $: filteredBugsByStatusAndSearch = (status: Status) => {
+    return data.tracker.bugs
+      .filter(bug => {
+        const matchesStatus = bug.status === status;
+        const matchesAssigneeName = unwrapUser(bug.assignee, "name")
+          ?.toLowerCase()
+          .includes(searchInput.toLowerCase());
+        const matchesReviewerName = unwrapUser(bug.reviewer, "name")
+          ?.toLowerCase()
+          .includes(searchInput.toLowerCase());
+
+        return matchesStatus && (matchesAssigneeName || matchesReviewerName);
+      })
+      .sort(sortPredicateBugPriority);
   };
 
   // Drag And Drop
@@ -127,15 +143,15 @@
 
     if (dragData) {
       const { bugId } = JSON.parse(dragData);
-      const bug = data.bugs.find(bug => bug._id === bugId);
+      const bug = data.tracker.bugs.find(bug => bug._id === bugId);
 
       if (bug) {
         const updatedBug: BugRequest = {
           ...bug,
           id: bug._id,
           status,
-          assignee: bug.assignee._id,
-          reviewer: bug.reviewer._id
+          assignee: JSON.stringify(bug.assignee),
+          reviewer: JSON.stringify(bug.reviewer)
         };
 
         const formData = loadFormDataFromObject(updatedBug);
@@ -159,7 +175,7 @@
   });
 </script>
 
-<section class="space-y-4">
+<section class="space-y-6">
   <header class="flex flex-row justify-between items-center">
     <h3 class="h3">{data.tracker.name}</h3>
     <div class="flex flex-row gap-4 items-center">
@@ -199,15 +215,21 @@
           <i class="fa-solid fa-people-group" />Manage Team
         </a>
       {/if}
+      <input
+        class="input rounded-md variant-ghost"
+        type="text"
+        bind:value={searchInput}
+        placeholder="Search by user..."
+      />
     </div>
   </header>
 
   <main class="grid {gridColumnsClass} transition-all ease-out duration-150 gap-6">
     {#each columnsByStatus as status (Object.values(Status).indexOf(status))}
-      <div class="flex flex-col space-y-4" in:fly={{ duration: 300, easing: quadInOut }}>
+      <div class="relative flex flex-col space-y-4" in:fly={{ duration: 300, easing: quadInOut }}>
         <h5 class="h5">{formatStatusText(status)}</h5>
         <BugList
-          bugs={filteredBugsByStatus(status)}
+          bugs={filteredBugsByStatusAndSearch(status)}
           hoveringOver={status === columnHovered && data.currentUserPermissions.includes("EDIT")}
           on:selectBug={openDetails}
           on:dragStart={dragStart}
@@ -215,6 +237,7 @@
           on:dragenter={() => (columnHovered = status)}
           on:dragleave={() => (columnHovered = null)}
           userPermissions={data.currentUserPermissions}
+          displayArchive={status === Status.COMPLETED}
         />
       </div>
     {/each}

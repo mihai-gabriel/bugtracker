@@ -132,7 +132,7 @@
           </ul>
           {#if $page.data.session?.user.id === tracker.author}
             <a
-              class="btn rounded-md variant-ghost-tertiary flex flex-row gap-2 items-center"
+              class="btn rounded-md variant-soft-tertiary flex flex-row gap-2 items-center"
               href="/trackers/{tracker._id}/users"
             >
               <i class="fa-solid fa-people-group" /> Manage Team

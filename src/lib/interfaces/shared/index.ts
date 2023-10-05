@@ -30,3 +30,8 @@ export type Permission = "READ" | "EDIT" | "DELETE";
  * Used to decide whether we remove or grant a permission
  */
 export type PermissionAction = "GRANT" | "REMOVE";
+
+/**
+ * Used to determine what role does the user have on a particular bug
+ */
+export type AssigneeType = "ASSIGNEE" | "REVIEWER";

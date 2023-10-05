@@ -5,7 +5,8 @@ import { ObjectId } from "mongodb";
 import type { Authorization } from "$lib/interfaces/db/authorization";
 
 /**
- * Retrieves from db all the bugs that have been assigned to the current authenticated user.
+ * Retrieves from db all the bugs that have been assigned to the current authenticated user
+ * and are archived.
  */
 export const GET: RequestHandler = async ({ locals }) => {
   const session = await locals.getSession();
@@ -46,7 +47,7 @@ export const GET: RequestHandler = async ({ locals }) => {
       {
         $match: {
           $or: [{ "assignee._id": new ObjectId(userId) }, { "reviewer._id": new ObjectId(userId) }],
-          archived: false
+          archived: true
         }
       }
     ])

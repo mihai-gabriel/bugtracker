@@ -25,24 +25,6 @@ export const GET: RequestHandler = async ({ locals, params }) => {
       { $match: { _id: new ObjectId(bugId) } },
       {
         $lookup: {
-          from: "users",
-          localField: "reviewer",
-          foreignField: "_id",
-          as: "reviewer"
-        }
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "assignee",
-          foreignField: "_id",
-          as: "assignee"
-        }
-      },
-      { $unwind: "$reviewer" },
-      { $unwind: "$assignee" },
-      {
-        $lookup: {
           from: "trackers",
           localField: "_id",
           foreignField: "bugs",

@@ -30,6 +30,7 @@
     italicModifier
   } from "$lib/utils/markdown";
   import type { DOMPurifyI } from "dompurify";
+  import { unwrapUser } from "$lib/utils/unwrapUser";
 
   export let data: PageData;
   export let form: ActionData;
@@ -63,10 +64,11 @@
       id: bug._id,
       title: bug.title,
       description: bug.description,
-      assignee: bug.assignee._id,
-      reviewer: bug.reviewer._id,
+      assignee: JSON.stringify(bug.assignee),
+      reviewer: JSON.stringify(bug.reviewer),
       priority: bug.priority,
-      status: status
+      status: status,
+      archived: bug.archived
     };
 
     const formData = loadFormDataFromObject(updatedBug);
@@ -75,6 +77,25 @@
 
     // Make sure we also update the default value for the status input
     statusInput = status;
+  };
+
+  const archiveBug = async (archiveValue: boolean): Promise<void> => {
+    const { bug } = data;
+
+    const updatedBug: BugRequest = {
+      id: bug._id,
+      title: bug.title,
+      description: bug.description,
+      assignee: JSON.stringify(bug.assignee),
+      reviewer: JSON.stringify(bug.reviewer),
+      priority: bug.priority,
+      status: bug.status,
+      archived: archiveValue
+    };
+
+    const formData = loadFormDataFromObject(updatedBug);
+    await fetch("/api/bugs", { method: "PUT", body: formData });
+    await invalidate("bug");
   };
 
   const deleteCurrentBug = async (): Promise<void> => {
@@ -172,9 +193,9 @@
     meta: { avatar: user.image ?? "" }
   }));
 
-  let assignee: string = data.bug.assignee._id;
-  let assigneeInput: string = data.bug.assignee.name ?? "";
-  let assigneeInputImage: string = data.bug.assignee.image ?? "";
+  let assignee: string = unwrapUser(data.bug.assignee, "_id") ?? "";
+  let assigneeInput: string = unwrapUser(data.bug.assignee, "name") ?? "";
+  let assigneeInputImage: string = unwrapUser(data.bug.assignee, "image") ?? "";
 
   const onAssigneeSelection = (event: CustomEvent<AutocompleteOption>): void => {
     assigneeInput = event.detail.label;
@@ -182,14 +203,26 @@
     assigneeInputImage = String(event.detail.meta?.avatar);
   };
 
-  let reviewer: string = data.bug.reviewer._id;
-  let reviewerInput: string = data.bug.reviewer.name ?? "";
-  let reviewerInputImage: string = data.bug.reviewer.image ?? "";
+  const unassignAsignee = () => {
+    assigneeInput = "";
+    assignee = "unassigned";
+    assigneeInputImage = "";
+  };
+
+  let reviewer: string = unwrapUser(data.bug.reviewer, "_id") ?? "";
+  let reviewerInput: string = unwrapUser(data.bug.reviewer, "name") ?? "";
+  let reviewerInputImage: string = unwrapUser(data.bug.reviewer, "image") ?? "";
 
   const onReviewerSelection = (event: CustomEvent<AutocompleteOption>): void => {
     reviewerInput = event.detail.label;
     reviewer = String(event.detail.value);
     reviewerInputImage = String(event.detail.meta?.avatar);
+  };
+
+  const unassignReviewer = () => {
+    reviewerInput = "";
+    reviewer = "unassigned";
+    reviewerInputImage = "";
   };
 
   const inactivateForm = () => {
@@ -218,13 +251,13 @@
     statusInput = data.bug.status;
     priorityInput = data.bug.priority;
 
-    assignee = data.bug.assignee._id;
-    assigneeInput = data.bug.assignee.name ?? "";
-    assigneeInputImage = data.bug.assignee.image ?? "";
+    assignee = unwrapUser(data.bug.assignee, "_id") ?? "";
+    assigneeInput = unwrapUser(data.bug.assignee, "name") ?? "";
+    assigneeInputImage = unwrapUser(data.bug.assignee, "image") ?? "";
 
-    reviewer = data.bug.reviewer._id;
-    reviewerInput = data.bug.reviewer.name ?? "";
-    reviewerInputImage = data.bug.reviewer.image ?? "";
+    reviewer = unwrapUser(data.bug.reviewer, "_id") ?? "";
+    reviewerInput = unwrapUser(data.bug.reviewer, "name") ?? "";
+    reviewerInputImage = unwrapUser(data.bug.reviewer, "image") ?? "";
   };
 
   $: formActive =
@@ -253,15 +286,23 @@
   };
 </script>
 
-{#if form?.errors || formActive || data.bug.status === Status.COMPLETED}
-  <div class="rounded-sm px-4 py-2 text-center {statusBarColor()}">
-    {#if form?.errors}
-      <p>Form Error <span class="text-slate-400">(fields reverted)</span></p>
-    {:else}
-      <p>{formActive ? "Pending Changes" : formatStatusText(data.bug.status)}</p>
-    {/if}
-  </div>
-{/if}
+<div class="flex flex-col gap-2">
+  {#if data.bug.archived}
+    <div class="rounded-sm px-4 py-2 text-center variant-soft">
+      <p>Archived</p>
+    </div>
+  {/if}
+
+  {#if form?.errors || formActive || data.bug.status === Status.COMPLETED}
+    <div class="rounded-sm px-4 py-2 text-center {statusBarColor()}">
+      {#if form?.errors}
+        <p>Form Error <span class="text-slate-400">(fields reverted)</span></p>
+      {:else}
+        <p>{formActive ? "Pending Changes" : formatStatusText(data.bug.status)}</p>
+      {/if}
+    </div>
+  {/if}
+</div>
 
 <form class="flex flex-col gap-6" method="POST" use:enhance={submitForm}>
   <header
@@ -334,6 +375,16 @@
         >
           <span><i class="fa-solid fa-pen-nib" /></span>
           <span>Edit Mode</span>
+        </span>
+        <!-- svelte-ignore a11y-click-events-have-key-events -->
+        <span
+          class="chip variant-soft hover:variant-filled"
+          on:click={() => archiveBug(!data.bug.archived)}
+          role="button"
+          tabindex="0"
+        >
+          <span><i class="fa-solid fa-box-archive" /></span>
+          <span>{data.bug.archived ? "Unarchive" : "Archive"}</span>
         </span>
       {/if}
       {#if data.currentUserPermissions.includes("DELETE")}
@@ -473,7 +524,7 @@
             >
               Markdown
             </a>
-            to format the text
+            to format the text. HTML not permitted.
           </p>
         {:else}
           {#key data.bug.description}
@@ -512,7 +563,12 @@
           >
             <div class="input-group-shim">
               {#if assigneeInputImage}
-                <Avatar src={assigneeInputImage} width="w-8" rounded="rounded-full" />
+                <Avatar
+                  class={!data.users.find(user => user._id === assignee) && "saturate-0"}
+                  src={assigneeInputImage}
+                  width="w-8"
+                  rounded="rounded-full"
+                />
               {:else}
                 <i class="fa-solid fa-user-astronaut fa-lg" />
               {/if}
@@ -533,13 +589,19 @@
               on:selection={onAssigneeSelection}
             />
           </div>
+          <button class="anchor self-start" on:click|preventDefault={unassignAsignee}>
+            Unassign
+          </button>
           <input type="hidden" name="assignee" bind:value={assignee} />
         {:else}
           <div class="flex flex-row gap-2">
-            <Avatar class="w-6 h-6" src={data.bug.assignee.image ?? ""} />
-            <p>{data.bug.assignee.name}</p>
+            <Avatar
+              class="w-6 h-6 {!data.users.find(user => user._id === assignee) && 'saturate-0'}"
+              src={unwrapUser(data.bug.assignee, "image") ?? ""}
+            />
+            <p>{unwrapUser(data.bug.assignee, "name") || "Unassigned"}</p>
           </div>
-          <input type="hidden" name="assignee" value={data.bug.assignee._id} />
+          <input type="hidden" name="assignee" value={unwrapUser(data.bug.assignee, "_id") ?? ""} />
         {/if}
       </article>
 
@@ -562,7 +624,12 @@
           >
             <div class="input-group-shim">
               {#if reviewerInputImage}
-                <Avatar src={reviewerInputImage} width="w-8" rounded="rounded-full" />
+                <Avatar
+                  class={!data.users.find(user => user._id === reviewer) && "saturate-0"}
+                  src={reviewerInputImage}
+                  width="w-8"
+                  rounded="rounded-full"
+                />
               {:else}
                 <i class="fa-solid fa-user-astronaut fa-lg" />
               {/if}
@@ -583,13 +650,19 @@
               on:selection={onReviewerSelection}
             />
           </div>
+          <button class="anchor self-start" on:click|preventDefault={unassignReviewer}>
+            Unassign
+          </button>
           <input type="hidden" name="reviewer" bind:value={reviewer} />
         {:else}
           <div class="flex flex-row gap-2">
-            <Avatar class="w-6 h-6" src={data.bug.reviewer.image ?? ""} />
-            <p>{data.bug.reviewer.name}</p>
+            <Avatar
+              class="w-6 h-6 {!data.users.find(user => user._id === reviewer) && 'saturate-0'}"
+              src={unwrapUser(data.bug.reviewer, "image") ?? ""}
+            />
+            <p>{unwrapUser(data.bug.reviewer, "name") || "Unassigned"}</p>
           </div>
-          <input type="hidden" name="reviewer" value={data.bug.reviewer._id} />
+          <input type="hidden" name="reviewer" value={unwrapUser(data.bug.reviewer, "_id") ?? ""} />
         {/if}
       </article>
 

@@ -27,14 +27,14 @@
     meta: { avatar: user.image ?? "" }
   }));
 
-  /* Asignee Configuration */
+  /* Assignee Configuration */
   let assignee: string;
   let assigneeInput: string;
   let assigneeInputImage: string;
 
-  let asigneePopup: PopupSettings = {
+  let assigneePopup: PopupSettings = {
     event: "focus-click",
-    target: "asignee-popup",
+    target: "assignee-popup",
     placement: "bottom"
   };
 
@@ -42,6 +42,12 @@
     assigneeInput = event.detail.label;
     assignee = String(event.detail.value);
     assigneeInputImage = String(event.detail.meta?.avatar);
+  };
+
+  const unassignAsignee = () => {
+    assigneeInput = "";
+    assignee = "unassigned";
+    assigneeInputImage = "";
   };
 
   /* Reviewer Configuration */
@@ -59,6 +65,12 @@
     reviewerInput = event.detail.label;
     reviewer = String(event.detail.value);
     reviewerInputImage = String(event.detail.meta?.avatar);
+  };
+
+  const unassignReviewer = () => {
+    reviewerInput = "";
+    reviewer = "unassigned";
+    reviewerInputImage = "";
   };
 
   /* Priority Configuration */
@@ -125,7 +137,7 @@
           <div
             class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md z-10"
             tabindex="-1"
-            data-popup="asignee-popup"
+            data-popup="assignee-popup"
           >
             <Autocomplete
               bind:input={assigneeInput}
@@ -135,7 +147,7 @@
           </div>
           <div
             class="input-group input-group-divider grid-cols-[auto_1fr]"
-            use:popup={asigneePopup}
+            use:popup={assigneePopup}
           >
             <div class="input-group-shim">
               {#if assigneeInputImage}
@@ -153,6 +165,9 @@
               autocomplete="off"
             />
           </div>
+          {#if assignee !== "unassigned" && assignee !== undefined}
+            <button class="anchor" on:click|preventDefault={unassignAsignee}>Unassign</button>
+          {/if}
 
           <input type="hidden" name="assignee" bind:value={assignee} />
           {#if $modalStore[0].meta.form?.errors?.assignee}
@@ -193,6 +208,9 @@
               autocomplete="off"
             />
           </div>
+          {#if reviewer !== "unassigned" && reviewer !== undefined}
+            <button class="anchor" on:click|preventDefault={unassignReviewer}>Unassign</button>
+          {/if}
 
           <input type="hidden" name="reviewer" bind:value={reviewer} />
           {#if $modalStore[0].meta.form?.errors?.reviewer}
@@ -227,6 +245,8 @@
             {/each}
           </RadioGroup>
         </fieldset>
+
+        <input type="hidden" name="archived" value={false} />
 
         <hr class="!border-t-1" />
 
