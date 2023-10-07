@@ -1,4 +1,5 @@
 import type { Permission } from "$lib/interfaces/shared";
+import type { DefaultSession } from "@auth/core/src/types";
 
 export type Unassigned = "unassigned";
 
@@ -24,4 +25,11 @@ export type BugUserRequest = {
   name?: string | null;
   email: string;
   image?: string | null;
+};
+
+/**
+ * Currently logged in user
+ */
+export type SessionUser = DefaultSession["user"] & {
+  id: string;
 };

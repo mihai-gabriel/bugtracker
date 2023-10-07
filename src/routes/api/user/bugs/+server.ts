@@ -28,7 +28,9 @@ export const GET: RequestHandler = async ({ locals }) => {
         }
       },
       { $unwind: "$tracker" },
-      { $replaceRoot: { newRoot: "$tracker" } },
+      {
+        $replaceRoot: { newRoot: { $mergeObjects: ["$tracker", { permissions: "$permissions" }] } }
+      },
       {
         $lookup: {
           from: "bugs",
@@ -40,7 +42,15 @@ export const GET: RequestHandler = async ({ locals }) => {
       { $unwind: "$bugs" },
       {
         $replaceRoot: {
-          newRoot: { $mergeObjects: [{ tracker: { _id: "$_id", name: "$name" } }, "$bugs"] }
+          newRoot: {
+            $mergeObjects: [
+              {
+                tracker: { _id: "$_id", name: "$name" },
+                permissions: "$permissions"
+              },
+              "$bugs"
+            ]
+          }
         }
       },
       {

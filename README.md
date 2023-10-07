@@ -1,38 +1,57 @@
-# create-svelte
+## Bug Tracker
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+A platform where you can track bugs on a board similar to Jira. Note: This is an early version, I'll be adding more
+features.
 
-## Creating a project
+### Gallery
 
-If you're seeing this, you've probably already done this step. Congrats!
+TODO: Add Demo Video
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+<details>
+  <summary>See screenshots</summary>
+  <p>Board / Tracker</p>
+  <a href="https://i.imgur.com/rIUmw9d.png" target="_blank">See Image</a>
+  <img src="https://i.imgur.com/rIUmw9d.png" />
 
-# create a new project in my-app
-npm create svelte@latest my-app
+  <p>Quick Edit Bug</p>
+  <a href="https://i.imgur.com/baTodZR.png" target="_blank">See Image</a>
+  <img src="https://i.imgur.com/baTodZR.png" />
+
+  <p>Bug Details - Edit mode</p>
+  <a href="https://i.imgur.com/I6E7aPB.png" target="_blank">See Image</a>
+  <img src="https://i.imgur.com/I6E7aPB.png" />
+
+  <p>Bug Details</p>
+  <a href="https://i.imgur.com/lTIYkJ2.png" target="_blank">See Image</a>
+  <img src="https://i.imgur.com/lTIYkJ2.png" />
+
+  <p>Manage board / tracker team</p>
+  <a href="https://i.imgur.com/T7IZtJl.png" target="_blank">See Image</a>
+  <img src="https://i.imgur.com/T7IZtJl.png" />
+
+  <p>'My assigned bugs' Page</p>
+  <a href="https://i.imgur.com/MiPATTA.png" target="_blank">See Image</a>
+  <img src="https://i.imgur.com/MiPATTA.png" />
+</details>
+
+### Set-up locally
+
+1. Set-up `.env.local` file at the **root directory** of the project with the following:
+
+```
+# Mongo DB variables
+DATABASE_URI=<MONGO_DATABASE_URL>
+DATABASE_KEY=<NAME_OF_YOUR_DATABASE>
+
+# Authentication System variables (As documented here: https://authjs.dev/reference/sveltekit#usage)
+AUTH_SECRET=<REALLY_LONG_AND_COMPLICATED_PASSKEY>
+
+# Github OAuth2 Provider Variables (checkout: https://github.com/settings/applications/new)
+GITHUB_ID=<GITHUB_ID>
+GITHUB_SECRET=<GITHUB_SECRET>
 ```
 
-## Developing
+2. Run `npm install` (or your preferred package manager).
+3. Run `npm run dev -- --open`.
+   Congrats!
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.

@@ -34,4 +34,4 @@ export type PermissionAction = "GRANT" | "REMOVE";
 /**
  * Used to determine what role does the user have on a particular bug
  */
-export type AssigneeType = "ASSIGNEE" | "REVIEWER";
+export type AssigneeType = "ASSIGNEE" | "REVIEWER" | "BOTH";

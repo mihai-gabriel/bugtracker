@@ -89,14 +89,14 @@
   {#if !excludedRoutes.includes($page.route.id ?? "") && menuActive}
     <div class="relative flex flex-col gap-2 p-6">
       <a
-        class="card variant-soft rounded-sm w-full py-2 px-4 flex flex-row items-center gap-2"
+        class="card variant-soft rounded-md w-full py-2 px-4 flex flex-row items-center gap-2"
         class:!variant-soft-primary={$page.url.pathname === "/"}
         href="/"
       >
         <i class="fa-solid fa-house" /> Home
       </a>
       <a
-        class="card variant-soft rounded-sm w-full py-2 px-4 flex flex-row items-center gap-2"
+        class="card variant-soft rounded-md w-full py-2 px-4 flex flex-row items-center gap-2"
         class:!variant-soft-primary={$page.url.pathname === "/trackers"}
         href="/trackers"
       >
@@ -104,7 +104,7 @@
         Trackers
       </a>
       <a
-        class="card variant-soft rounded-sm w-full py-2 px-4 flex flex-row items-center gap-2"
+        class="card variant-soft rounded-md w-full py-2 px-4 flex flex-row items-center gap-2"
         class:!variant-soft-primary={$page.url.pathname === "/bugs"}
         href="/bugs"
       >

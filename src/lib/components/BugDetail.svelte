@@ -155,34 +155,38 @@
               on:selection={onAssigneeSelection}
             />
           </div>
-          <div
-            class="input-group input-group-divider grid-cols-[auto_1fr]"
-            use:popup={assigneePopup}
-          >
-            <div class="input-group-shim">
-              {#if assigneeInputImage}
-                <Avatar
-                  class={!users.find(user => user._id === assignee) && "saturate-0"}
-                  src={assigneeInputImage}
-                  width="w-8"
-                  rounded="rounded-full"
-                />
-              {:else}
-                <i class="fa-solid fa-user-astronaut fa-lg" />
-              {/if}
+          <div class="flex flex-row gap-4" use:popup={assigneePopup}>
+            <div class="input-group input-group-divider grid-cols-[auto_1fr]">
+              <div class="input-group-shim">
+                {#if assigneeInputImage}
+                  <Avatar
+                    class={!users.find(user => user._id === assignee) && "saturate-0"}
+                    src={assigneeInputImage}
+                    width="w-8"
+                    rounded="rounded-full"
+                  />
+                {:else}
+                  <i class="fa-solid fa-user-astronaut fa-lg" />
+                {/if}
+              </div>
+              <input
+                id="assignee"
+                class="autocomplete"
+                type="search"
+                bind:value={assigneeInput}
+                placeholder="Search..."
+                autocomplete="off"
+              />
             </div>
-            <input
-              id="assignee"
-              class="autocomplete"
-              type="search"
-              bind:value={assigneeInput}
-              placeholder="Search..."
-              autocomplete="off"
-            />
+            {#if assignee !== "unassigned" && assignee !== ""}
+              <button
+                class="btn variant-soft items-center gap-2"
+                on:click|preventDefault={unassignAsignee}
+              >
+                <i class="fa-solid fa-circle-xmark" /> Remove
+              </button>
+            {/if}
           </div>
-          {#if assignee !== "unassigned" && assignee !== ""}
-            <button class="anchor" on:click|preventDefault={unassignAsignee}>Unassign</button>
-          {/if}
 
           <input type="hidden" name="assignee" bind:value={assignee} />
           {#if $modalStore[0].meta.form?.errors?.assignee}
@@ -192,31 +196,6 @@
 
         <fieldset class="space-y-2 relative">
           <label for="reviewer">Reviewer:</label>
-          <div
-            class="input-group input-group-divider grid-cols-[auto_1fr]"
-            use:popup={reviewerPopup}
-          >
-            <div class="input-group-shim">
-              {#if reviewerInputImage}
-                <Avatar
-                  class={!users.find(user => user._id === reviewer) && "saturate-0"}
-                  src={reviewerInputImage}
-                  width="w-8"
-                  rounded="rounded-full"
-                />
-              {:else}
-                <i class="fa-solid fa-user-astronaut fa-lg" />
-              {/if}
-            </div>
-            <input
-              id="reviewer"
-              class="w-full autocomplete"
-              type="search"
-              bind:value={reviewerInput}
-              placeholder="Search..."
-              autocomplete="off"
-            />
-          </div>
           <div
             class="card w-full max-h-48 p-4 overflow-y-auto drop-shadow-md"
             tabindex="-1"
@@ -228,10 +207,38 @@
               on:selection={onReviewerSelection}
             />
           </div>
-          {#if reviewer !== "unassigned" && reviewer !== ""}
-            <button class="anchor" on:click|preventDefault={unassignReviewer}>Unassign</button>
-          {/if}
-
+          <div class="flex flex-row gap-2" use:popup={reviewerPopup}>
+            <div class="input-group input-group-divider grid-cols-[auto_1fr]">
+              <div class="input-group-shim">
+                {#if reviewerInputImage}
+                  <Avatar
+                    class={!users.find(user => user._id === reviewer) && "saturate-0"}
+                    src={reviewerInputImage}
+                    width="w-8"
+                    rounded="rounded-full"
+                  />
+                {:else}
+                  <i class="fa-solid fa-user-astronaut fa-lg" />
+                {/if}
+              </div>
+              <input
+                id="reviewer"
+                class="w-full autocomplete"
+                type="search"
+                bind:value={reviewerInput}
+                placeholder="Search..."
+                autocomplete="off"
+              />
+            </div>
+            {#if reviewer !== "unassigned" && reviewer !== ""}
+              <button
+                class="btn variant-soft items-center gap-2"
+                on:click|preventDefault={unassignReviewer}
+              >
+                <i class="fa-solid fa-circle-xmark" /> Remove
+              </button>
+            {/if}
+          </div>
           <input type="hidden" name="reviewer" bind:value={reviewer} />
           {#if $modalStore[0].meta.form?.errors?.reviewer}
             <p class="text-error-500">{$modalStore[0].meta.form?.errors?.reviewer}</p>

@@ -1,9 +1,7 @@
-import type { DefaultSession } from '@auth/core/types';
+import type { SessionUser } from "$lib/interfaces/dto/user";
 
-declare module '@auth/core/types' {
+declare module "@auth/core/types" {
   interface Session {
-    user: {
-      id?: string;
-    } & DefaultSession['user'];
+    user: SessionUser;
   }
 }

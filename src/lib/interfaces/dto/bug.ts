@@ -1,4 +1,4 @@
-import type { Priority, Status } from "$lib/interfaces/shared";
+import type { Permission, Priority, Status } from "$lib/interfaces/shared";
 import type { OptionalAssignedUser } from "./user";
 import type { TrackerResponse } from "$lib/interfaces/dto/tracker";
 
@@ -31,4 +31,8 @@ export type BugResponse = {
 
 export type BugResponseWithTracker = BugResponse & {
   tracker: Partial<TrackerResponse>;
+};
+
+export type AssignedIssuesResponse = BugResponseWithTracker & {
+  permissions: Permission[];
 };
